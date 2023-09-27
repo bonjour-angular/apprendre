@@ -1,0 +1,15 @@
+@font-face {
+  font-family: "Cubano";
+  src: url("../fonts/cubano.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM";
+  src: url("../fonts/dm-regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
