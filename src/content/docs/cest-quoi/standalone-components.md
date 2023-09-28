@@ -1,11 +1,41 @@
 ---
 title: Standalone Components
-description: A reference page in my new Starlight docs site.
+description: C'est quoi un Standalone Component dans Angular ?
 ---
 
-Reference pages are ideal for outlining how things work in terse and clear terms.
-Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.
+C'est une nouveauté arrivée avec la version 14 d'Angular. Cette fonctionnalité permet de se passer des `@NgModule`, et c'est tant mieux !
 
-## Further reading
+```typescript
+@Component({
+  selector: 'app-header',
+  standalone: true,
+  template: `...`
+})
+export class HeaderComponent {}
+```
 
-- Read [about reference](https://diataxis.fr/reference/) in the Diátaxis framework
+En ajoutant l'attribut `standalone: true` à mon composant, je le rends standalone, ainsi je n'ai plus besoin de le déclarer dans un `@NgModule`, je peux l'utiliser directement dans un autre composant si celui-ci est également standalone en l'important dans l'attribut `imports`:
+
+```typescript
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [HeaderComponent],
+  template: `
+    <app-header />
+    <main>...</main>
+  `
+})
+export class AppComponent {}
+```
+
+Je peux également utiliser les standalones components pour les composants de routing, et j'utilise `loadComponent` pour les lazy loader.
+
+```typescript
+export const appRoutes: Route[] = [
+  {
+    path: 'dashboard,
+    loadComponent: import('./routes/dashboard/dashboard.component.ts')
+  }
+]
+```

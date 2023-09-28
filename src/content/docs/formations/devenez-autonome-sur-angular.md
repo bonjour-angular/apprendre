@@ -1,6 +1,25 @@
 ---
-title: Devenir Autonome sur Angular
+title: Devenez Autonome sur Angular
 description: Devenez autonome sur les versions modernes d'Angular
+template: splash
+banner:
+  content: |
+    We just launched something cool!
+    <a href="https://example.com">Check it out</a>
+hero:
+  title: Devenez Autonome sur Angular
+  tagline: Devenez autonome sur les versions modernes d'Angular
+  image:
+    alt: A glittering, brightly colored logo
+    file: ../../../assets/logo.webp
+  actions:
+    - text: Tell me more
+      link: /getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/astronaut/my-project
+      icon: external
 ---
 
 La route pour devenir expert.e sur Angular est longue, fort heureusement je l'ai déjà arpentée pour vous !
