@@ -4,7 +4,7 @@ import starlight from "@astrojs/starlight";
 // https://astro.build/config
 export default defineConfig({
   redirects: {
-    "/": "/commencez-par-ici",
+    "/": "/par-ou-commencer",
   },
   integrations: [
     starlight({
@@ -12,7 +12,7 @@ export default defineConfig({
       logo: {
         src: "./src/assets/logo.webp",
       },
-      customCss: ["./src/styles/main.css"],
+      customCss: ["./src/styles/index.css"],
       locales: {
         root: {
           label: "Français",
@@ -23,7 +23,7 @@ export default defineConfig({
         github: "https://github.com/withastro/starlight",
       },
       sidebar: [
-        { label: "👋 Commencez par ici", link: "/commencez-par-ici" },
+        { label: "👋 Par où commencer ?", link: "/par-ou-commencer" },
         {
           label: "🚀 Formation Angular",
           autogenerate: { directory: "formations" },
