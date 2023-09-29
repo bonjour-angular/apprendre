@@ -3,24 +3,16 @@ title: C'est quoi Angular ?
 description: C'est quoi Angular ?
 sidebar:
   label: Angular
-  badge:
-    text: Experimental
-    variant: caution
-
 ---
 
-C'est un **framework** pour créer des **SPA** en **TypeScript**.
+C'est un **framework** frontend servant à créer des applications web en **SPA** grâce à **TypeScript**.
 
 Définissons ces termes :
 
-- **Framework** : un framework est un ensemble de librairies qui permettent de créer des applications web. Il y a des frameworks pour tous les langages de programmation. Angular est un framework pour le langage TypeScript.
+- **Framework** : quand on créé des logiciels, on a des besoins récurrents : router, gérer des formulaires, faire des appels HTTP, etc. Un framework propose un ensemble de fonctionnalités déjà pré-conçues répondant à ces besoins.
 - **SPA** : une Single Page Application est une application web qui ne charge qu'une seule page HTML. Toutes les autres pages sont chargées dynamiquement en JavaScript.
-- **TypeScript** : c'est un langage de programmation qui est une surcouche de JavaScript. Il permet d'écrire du code plus robuste et plus maintenable.
+- **TypeScript** : c'est un langage de programmation qui est une surcouche de JavaScript. Il permet d'écrire du code plus robuste et plus maintenable notamment grâce au typing.
 
-En 2016, l'équipe de chez Google a lancé Angular, une refonte totale de la version précédente, AngularJS. Il reste l'une des solutions les plus populaires mais souffrent d'une image qui lui colle à la peau : il est difficile à apprendre.
+En 2016, l'équipe de chez Google a lancé Angular, une refonte totale de la version précédente, AngularJS. Il reste l'une des solutions les plus populaires.
 
-Et c'est vrai ! Angular est un framework très complet qui nécessite de connaître beaucoup de concepts. Mais c'est aussi un framework qui évolue énormément surtout depuis 2022.
-
-## Que s'est-il passé en 2022 ?
-
-En 2022, l'équipe de chez Google a annoncé une nouvelle version d'Angular : Angular 14.
+Angular est aujourd'hui une des solutions les plus utilisées pour construire des applications web frontend.

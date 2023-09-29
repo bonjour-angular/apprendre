@@ -1,41 +1,49 @@
 ---
 title: Les variables de contexte de *ngFor
-description: Utilisez 'default' pour avoir un routing plus simple
+description: Les variables de contexte de *ngFor
 ---
 
-Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! :nerd:
+Vous connaissiez peut-être déjà la variable `index` qu'on peut utiliser comme ceci :
 
-Je peux faire ça avec un composant :
 ```typescript
 @Component({
-  standalone: true,
-  template: `...`
+  template: `
+   <ul>
+      <li *ngFor="let book of bookList; let index = index">
+        <span>{{ index }} :</span>
+        <span>{{ book.name }}</span>
+      </li>
+    </ul>
+  `
 })
-export default class DashboardComponent {}
+export class AppComponent{}
 ```
-Et aussi avec mes routes :
-```typescript
-export default [
-  {
-    path: '',
-    component: AboutComponent
-  }  
-] as Route[];
+
+Mais saviez vous qu'il en existe bien d'autres ?
+
+```html
+@Component({
+  template: `
+   <ul>
+      <li *ngFor="
+            let product of products;
+            let index = index;
+            let isOdd = odd;
+            let isEven = even;
+            let isFirst = first;
+            let isLast = last"
+      >
+        <span>{{ index }}</span>
+        <span>{{ product.name }}</span>
+        <span *ngIf="isOdd">is odd</span>
+        <span *ngIf="isEven">is even</span>
+        <span *ngIf="isFirst">is the first product</span>
+        <span *ngIf="isLast ">is the last product</span>
+      </li>
+    </ul>
+  `
+})
+export class AppComponent{}
 ```
-Puis j'ai le droit d'import sans utiliser `then()` !
-```typescript
-export const appRoutes: Route[] = [
-   {
-     path: '',
-     component: AppComponent,
-   },
-   {
-     path: 'dashboard',
-     loadComponent: () => import('./dashboard/dashboard.component'),
-   }, 
-   {
-     path: 'about',
-     loadChildren: () => import('./about/about.routes'),
-   }, 
-]
-```
+
+Cela peut être très pratique pour styliser vos listes de manière particulière par exemple !
