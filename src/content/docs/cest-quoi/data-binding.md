@@ -1,11 +1,40 @@
 ---
-title: Data binding
-description: A reference page in my new Starlight docs site.
+title: C'est quoi le Data binding ?
+description: C'est quoi le Data binding dans Angular ?
+sidebar:
+  label: Data binding
 ---
 
-Reference pages are ideal for outlining how things work in terse and clear terms.
-Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.
+Le Data binding est un mécanisme qui permet de lier des données entre elles. Dans Angular, il existe 4 types de Data binding :
 
-## Further reading
+## Interpolation
 
-- Read [about reference](https://diataxis.fr/reference/) in the Diátaxis framework
+L'interpolation permet d'afficher une valeur dans le template. Pour cela, on utilise la syntaxe `{{ }}` :
+
+```html
+<p>Mon nom est {{ name }}</p>
+```
+
+## Property binding
+
+Le property binding permet de lier une propriété d'un élément HTML à une valeur dans le composant. Pour cela, on utilise la syntaxe `[ ]` :
+
+```html
+<button [disabled]="isDisabled">Mon bouton</button>
+```
+
+## Event binding
+
+L'event binding permet de lier un événement d'un élément HTML à une méthode dans le composant. Pour cela, on utilise la syntaxe `( )` :
+
+```html
+<button (click)="onClick()">Mon bouton</button>
+```
+
+## Two-way binding
+
+Le two-way binding permet de lier une propriété d'un élément HTML à une valeur dans le composant, et de lier un événement de cet élément à une méthode dans le composant. Pour cela, on utilise la syntaxe `[( )]` :
+
+```html
+<input [(ngModel)]="name" />
+```

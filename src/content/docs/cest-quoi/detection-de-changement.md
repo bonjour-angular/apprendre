@@ -1,11 +1,16 @@
 ---
-title:  Detection de changement
-description: A reference page in my new Starlight docs site.
+title: C'est quoi la detection de changement ?
+description: C'est quoi la detection de changement dans Angular ?
+sidebar:
+  label: Detection de changement
 ---
 
-Reference pages are ideal for outlining how things work in terse and clear terms.
-Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.
+La détection de changement est un mécanisme qui permet de mettre à jour le DOM en fonction des changements dans le composant. Par exemple, si on a un composant qui affiche un nom, et que ce nom change, il faut mettre à jour le DOM pour afficher le nouveau nom.
 
-## Further reading
+En Angular, la détection de changement est automatique. Cela signifie que le framework va détecter les changements dans le composant et mettre à jour le DOM. Cela se fait grâce à la classe `ChangeDetectorRef` qui est injectée dans le composant.
 
-- Read [about reference](https://diataxis.fr/reference/) in the Diátaxis framework
+Par exemple, imaginons un composant qui affiche un nom :
+
+```ts
+
+```
