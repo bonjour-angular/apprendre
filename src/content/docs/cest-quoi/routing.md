@@ -1,6 +1,8 @@
 ---
-title: Routing
-description: A reference page in my new Starlight docs site.
+title: C'est quoi le Routing ?
+description: C'est quoi le Routing dans Angular ?
+sidebar:
+  label: Routing
 ---
 
 C'est ce qui permet de relier une url au template (le HTML et CSS) d'un composant. En gros vous faites votre composant, puis dans le router vous indiquez que lorsque l'utilisateur ira sur le path `dashboard` alors Angular devra afficher le composant `dashboard`.
