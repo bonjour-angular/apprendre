@@ -1,11 +1,11 @@
 ---
-title: Output
-description: A reference page in my new Starlight docs site.
+title: C'est quoi @Output ?
+description: C'est quoi @Output dans Angular ?
+sidebar:
+  label: Output
 ---
 
-Reference pages are ideal for outlining how things work in terse and clear terms.
-Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.
+C'est un Decorator disponible nativement dans Angular.
 
-## Further reading
+Il sert à passer des données d'un composant vers un autre composant utilisé dans son template, en d'autres termes son composant enfant.
 
-- Read [about reference](https://diataxis.fr/reference/) in the Diátaxis framework

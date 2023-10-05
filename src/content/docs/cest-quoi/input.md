@@ -1,7 +1,10 @@
 ---
-title: Input
-description: C'est quoi @Input() dans Angular ?
+title: C'est quoi @Input ?
+description: C'est quoi @Input dans Angular ?
+sidebar:
+  label: Input
 ---
+
 
 C'est un Decorator disponible nativement dans Angular.
 

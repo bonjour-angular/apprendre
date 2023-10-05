@@ -1,6 +1,8 @@
 ---
-title: Guard
+title: C'est quoi un Guard ?
 description: C'est quoi un Guard dans Angular ?
+sidebar:
+  label: Guard
 ---
 
 Un Guard c'est un peu comme un agent de sécurité à l'entré d'un bâtiment. Il va décider si vous avez le droit d'entrer ou de sortir. Sauf que là cet agent de sécurité est une fonction typescript, et le bâtiment c'est une page de votre application Angular ! Cette fonction doit être passer dans le `Router` Angular. Un cas courant est une page qu'on ne peut accéder que si on est connecter à l'application. 
