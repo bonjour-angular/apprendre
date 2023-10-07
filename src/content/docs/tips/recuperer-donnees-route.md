@@ -3,39 +3,78 @@ title: Récupérer les données de la Route
 description: Utilisez 'default' pour avoir un routing plus simple
 ---
 
-Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! :nerd:
+Imaginons cette route :
 
-Je peux faire ça avec un composant :
-```typescript
-@Component({
-  standalone: true,
-  template: `...`
-})
-export default class DashboardComponent {}
-```
-Et aussi avec mes routes :
-```typescript
-export default [
+```ts
   {
-    path: '',
-    component: AboutComponent
-  }  
-] as Route[];
+    path: 'products/:id',
+    loadComponent: () => import('./routes/products/products.route'),
+    data: {
+      showCart: true,
+    },
+  },
 ```
-Puis j'ai le droit d'import sans utiliser `then()` !
-```typescript
-export const appRoutes: Route[] = [
-   {
-     path: '',
-     component: AppComponent,
-   },
-   {
-     path: 'dashboard',
-     loadComponent: () => import('./dashboard/dashboard.component'),
-   }, 
-   {
-     path: 'about',
-     loadChildren: () => import('./about/about.routes'),
-   }, 
-]
+
+Jusqu'à maintenant si vous vouliez récupérer `:id` ou `showCart` ou encore un `queryParam`comme `/product?foo=123`, il fallait faire :
+
+```ts
+@Component({
+  template: `
+    <h2>Snapshot</h2>
+    {{id}}
+    {{showCart }}
+    {{id}}
+
+    <h2>Observable</h2>
+    {{id$ | async}}
+    {{showCart$ | async }}
+    {{id$ | async}}
+  `
+})
+export class ProductsComponent {
+ private activatedRoute = inject(ActivatedRoute);
+
+  // Snapshot
+  id = this.activatedRoute.snapshot.params['id'];
+  showCart = this.activatedRoute.snapshot.data['showCart'];
+  foo = this.activatedRoute.snapshot.queryParams['foo'];
+
+  // Observables
+  id$ = this.activatedRoute.params.pipe(map((params) => params['id']));
+  showCart$ = this.activatedRoute.data.pipe(map((data) => data['showCart']));
+  foo$ = this.activatedRoute.queryParams.pipe( 
+    map((queryParams) => queryParams['foo']) 
+  );
+}
+```
+
+Et bien **depuis la version 16** de Angular, tout cela est grandement simplifié !
+Grâce à `@Input()` vous pourrez récupérer ces trois données directement !
+
+```ts
+@Component({
+  template: `
+    {{id}}
+    {{showCart}}
+    {{id}}
+  `
+})
+export class ProductsComponent {
+  @Input() id: string;
+  @Input() foo: string;
+  @Input() showCart: boolean;
+}
+```
+
+Il suffit simplement de nommer votre `@Input()` comme le nom de la donnée sur laquelle vous voulez être bindé, et c'est tout !
+
+Il faut également ajouter `withComponentInputBinding()` dans votre config, comme ceci : 
+
+```ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes, withComponentInputBinding()),
+  ],
+};
+
 ```

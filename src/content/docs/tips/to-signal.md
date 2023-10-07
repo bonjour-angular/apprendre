@@ -14,7 +14,6 @@ Il suffit d'utiliser toSignal().
 ```ts
 @Component({
   standalone: true,
-  imports: [CommonModule],
   template: `
     <ul>
       <li *ngFor="let todo of todos()">

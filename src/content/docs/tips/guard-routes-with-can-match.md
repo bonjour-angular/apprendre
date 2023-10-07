@@ -1,41 +1,41 @@
 ---
 title: Protéger vos routes au même path
-description: Utilisez 'default' pour avoir un routing plus simple
+description: Protéger vos routes au même path
 ---
 
-Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! :nerd:
+Parfois vous aurez envie qu'un même path renvoie sur deux routes (composants) différents selon une condition, cela peut-être le rôle de l'utilisateur ou un feature flag.
 
-Je peux faire ça avec un composant :
-```typescript
-@Component({
-  standalone: true,
-  template: `...`
-})
-export default class DashboardComponent {}
+Le problème c'est que `canActivate` ne permet pas de faire ça, mais `canMatch` oui !
+
+👉Si le guard passé dans le `canMatch` renvoie `false`, alors le router va skip la route actuelle et essayer les routes suivantes !
+
+```ts
+
+export function hasRoleGuard(role: Role): CanActivateFn {       
+  return (route, state) => {
+    const role$ = inject(UserStore).role$:
+    
+    // actuellement ce role 👇 est 'student'
+    return role$.pipe(map(userRole => userRole === role));  
+  };
+} 
+
 ```
-Et aussi avec mes routes :
-```typescript
-export default [
+
+```ts
+export const appRoutes: Route [] = [
   {
-    path: '',
-    component: AboutComponent
-  }   
-] as Route[];
-```
-Puis j'ai le droit d'import sans utiliser `then()` !
-```typescript
-export const appRoutes: Route[] = [
-   {
-     path: '',
-     component: AppComponent,
-   },
-   {
-     path: 'dashboard',
-     loadComponent: () => import('./dashboard/dashboard.component'),
-   }, 
-   {
-     path: 'about',
-     loadChildren: () => import('./about/about.routes'),
-   }, 
+    path: 'room',
+    loadComponent: () => import('./teachers-room.component'),
+    // grâce à canMatch, le router va sauter ce path et essayer 
+    // le path 'room' suivant car 👇 renvoie false
+    canMatch: [hasRoleGuard('teacher')]
+  }, 
+  {
+    path: 'room',
+    loadComponent: () => import('./students-room.component'),
+    // et ici, 👇 renvoie true donc 👆 va être chargé
+    canMatch: [hasRoleGuard('student')]
+  },
 ]
 ```

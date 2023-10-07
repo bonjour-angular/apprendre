@@ -1,9 +1,9 @@
 ---
 title: Rendre obligatoire les @Input()
-description: Utilisez 'default' pour avoir un routing plus simple
+description: Rendre obligatoire les @Input()
 ---
 
-C'est arrivé en **version 16**, vos @Input() peuvent désormais être marqué comme étant required !
+C'est arrivé en **version 16**, vos `@Input()` peuvent désormais être marqué comme étant `required` !
 
 ```ts
 @Component({

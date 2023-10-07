@@ -37,6 +37,6 @@ import { converting } from '@project/shared/utils/converting';
 
 C'est une chose à faire pour plusieurs raisons :
 
-:point_right: C'est bien plus facile à lire que des paths relatifs
-:point_right: C'est utile pour le refactoring : si votre code change d'endroit l'import reste le même
-:point_right: Les IDE arrivent à importer directement depuis les alias
+- C'est bien plus facile à lire que des paths relatifs
+- C'est utile pour le refactoring : si votre code change d'endroit l'import reste le même
+- Les IDE arrivent à importer directement depuis les alias

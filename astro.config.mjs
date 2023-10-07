@@ -28,14 +28,22 @@ export default defineConfig({
         {
           label: "🚀 Formation Angular",
           autogenerate: { directory: "formations" },
+          collapsed: false,
         },
         {
           label: "🤔 C'est quoi ?",
           autogenerate: { directory: "cest-quoi" },
+          collapsed: false,
+        },
+        {
+          label: "📕 Articles",
+          autogenerate: { directory: "articles" },
+          collapsed: true,
         },
         {
           label: "😎 Tips",
           autogenerate: { directory: "tips" },
+          collapsed: true,
         },
       ],
     }),
