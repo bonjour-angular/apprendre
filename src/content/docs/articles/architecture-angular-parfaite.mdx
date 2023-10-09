@@ -1,0 +1,418 @@
+---
+title: L'architecture Angular parfaite ?
+description: L'architecture Angular parfaite ?
+---
+
+:::note
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/larchitecture-angular-parfaite-4ae7bd9335aa).
+
+S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
+:::
+
+> _“Architecture” ici fait référence à la structure de fichiers, à la façon dont vous la découpez en différents composants, services, modules etc et de l’endroit où vous les placez. Aussi, ce qui va suivre est basé sur mon expérience personnelle, et doit être considéré comme une boîte à outils qui, comme toute approche, présente des avantages et des inconvénients._
+
+Chaque fois que je crée ou modifie une architecture Angular, je me pose **3 questions** :
+
+1. Est-ce que les devs’ trouveront mon architecture agréable à utiliser au quotidien ?
+2. Est-ce qu’elle pourra encaisser les évolutions à venir ?
+3. Est-ce que mon architecture reflète mon besoin métier au mieux ?
+
+Chacun de mes choix est confronté à ces 3 questions.
+
+Si les réponses sont “oui”, alors je sais que mon architecture est parfaite, ou plutôt qu’elle est **parfaitement adaptée à mon contexte métier actuel.**
+
+Car oui, la réponse à ces 3 questions dépendent du logiciel que l’on doit créer et de l’équipe en charge. Ce que je veux dire par là c’est qu’une certaine architecture pourrait très bien fonctionner dans une situation mais pas une autre car le contexte métier (qu’on appelle la complexité inhérente) est différent.
+**Ainsi, deux architectures dans deux contextes différents peuvent varier drastiquement et il n’existe pas d’architecture qui couvre 100% des cas.**
+
+Cependant, les 3 questions que j’ai énoncé plus haut ainsi que des principes éprouvées vont nous permettre d’atteindre notre objectif : concevoir l’architecture Angular parfaite pour **votre besoin**.
+
+Dans cette article, nous allons tenter de comprendre **pourquoi ces questions sont importantes et surtout comment y répondre !**
+
+---
+
+### Est-ce que mon architecture est agréable ?
+
+L’agréabilité ressentie par les devs est primordiale dans vos architectures et doit être au cœur de chacune de vos décisions. Cela fait partie d’un principe qu’on appelle la **Developer eXperience (DX)**. C’est à dire l’aisance qu’ont les devs à faire leur métier.
+
+Pour moi, la DX est la top prio. Nous vivons dans un milieu où les technologies et les besoins métiers évoluent constamment, l’impact de ça c’est que vous allez régulièrement mettre votre code à jour car l’API d’une librairie ou la version de votre framework ont changé. Egalement, d’un point de vue business, vos PO/PM vous demanderont d’ajouter des fonctionnalités ou d’en modifier très régulièrement. Bref, on passe nos journées à modifier notre code et notre architecture de manière micro ou macro.
+
+Et changer les choses dans une codebase c’est le début des embrouilles :
+
+- introduction de bugs dus à des effets de bords
+- lassitude, agacement ou inquiétudes des devs qui doivent replonger dans un code obscur
+
+Une mauvaise architecture entraîne une mauvaise DX qui entraîne une équipe anxieuse et peu efficace. On aura peur de modifier les choses par incompréhension de la codebase et/ou on aura la flemme de “faire propre” car les patterns sont lourds : c’est le début de la dette technique.
+
+Ainsi, **l’importance d’avoir une architecture agréable à utiliser est primordiale pour la santé mentale des devs et donc la pérennité du business.**
+
+Si l’équipe de développement trouve la structure de fichiers cohérentes et facile à naviguer alors elle pourra ajouter, modifier ou supprimer des éléments plus rapidement et sans crainte d’effet de bord.
+
+Ce qui participe également à l’agréabilité de navigation dans une architecture c’est de **garder le nombre de fichiers et dossiers bas tout en respectant la separation of concerns**. La multiplication de fichiers peut tout à fait répondre à un besoin, mais elle peut également être vecteur d’erreurs. On doit trouver des noms adéquats, on doit faire attention à ne pas mélanger les responsabilités des fichiers, et au-delà de ça cela apporte de la lourdeur à la navigation entre fichiers.
+
+Après tout, si Angular et NgRx s’évertuent à réduire le boilerplate de leurs produits, c’est parce qu’ils ont bien compris l’importance d’avoir un workspace léger.
+
+Ne vous méprenez pas sur ce que je dis, je ne vous incite pas à avoir un seul gros composant, service ou store avec tout dedans. Je vous incite à découper les choses quand il y a réellement une raison de le faire. Lorsque vous vous apprêtez à découper un fichier en plusieurs , posez vous la question du gain et utilisez votre bon sens. Gardez la separation of concerns comme indicateur.
+
+Ne sous-estimez pas l’importance de la DX. C’est le nerf de la guerre. Posez vous la question de savoir si une nouvelle personne qui intègre l’équipe arriverait à comprendre l’architecture frontend en quelques minutes.
+
+### Est-ce que mon architecture est évolutive ?
+
+Je le disais en introduction, les besoins métier évoluent en permanence. Une feature en plus, une autre utilisée à plusieurs endroits qui devient un peu différente selon là où elle est consommée.
+
+Le problème c’est que ni les devs ni les PO/PM ne voient dans le futur, donc oubliez tout de suite l’idée que vous ferez une architecture qui encaissera tous les changements futurs. Ca n’arrivera pas.
+
+Alors on pourrait se dire que de sortir l’artillerie lourde dès le départ est une bonne idée. Partons sur une architecture hexagonale en monorepo et full microfrontends. Au moins on aura quelque chose d’évolutif.
+
+C’est peut-être le cas, mais cela implique que l’équipe, incluant vous-même, soit hautement qualifiés pour entretenir ce genre d’architecture. Et, spoiler alert, ça n’arrive pas non plus ou dans de trop rares cas.
+
+Une architecture évolutive est avant tout quelque chose de facilement incrémentale et dont on a la maîtrise. C’est à dire quelque chose qui diminue les contraintes : si on veut poser une nouvelle brique par dessus de manière isolée ou non, on peut le faire.
+
+Si je devais donner un choix stratégique offrant beaucoup de valeurs sans demander une maturité technique démesurée, c’est l’utilisation d’un monorepo.
+
+Un monorepo, c’est le fait d’avoir un seul repository git avec plusieurs apps et libs. Cela permet notamment de faciliter le partage et la réutilisation de code entre vos différentes briques techniques et de profiter d’un écosystème très évolutif. Ma solution préférée est NX.
+
+NX est un écosystème facilitant la mise en place et le maintient d’architecture web. Vous profiterez de ses outils qui permettent d’intégrer facilement les outils et patterns populaires du web (Angular, React, Jest, Cypress, Storybook…). NX est surtout utilisé dans les architectures monorepo mais vous pouvez tout à fait utiliser NX pour une simple application.
+
+Personnellement je l’utilise beaucoup dans mon quotidien et contrairement à ce qu’il se dit ce n’est pas uniquement adapté aux gros projets. Mais ce n’est pas trivial non plus, cela nécessite une bonne coordination entre les membres de l’équipe.
+
+Je prévois un article dédié sur le sujet ! Stay tuned!
+
+A part ça, une erreur que je vois souvent et qui impacte négativement l’évolutivité, c’est la mauvaise compréhension du principe DRY (Don’t Repeat Yourself).
+
+J’ai travaillé pour une société qui fabriquait des logiciels en marque blanche. En gros, on avait plusieurs clients, chacun désirant une application dédiée avec certaines fonctionnalités. Ces fonctionnalités étaient parfois les mêmes entre les différentes apps (donc pour les différents clients), parfois non, ou parfois c’était les mêmes mais avec quelques différences subtiles. Donc les apps avaient quelques bases communes entre elles mais aussi beaucoup de spécificités.
+
+Le choix (qui avait été fait bien avant mon arrivé) a été de concevoir une seul app Angular avec toutes les fonctionnalités à l’intérieur, chaque client partageait les mêmes pages où un tas de if se trouvaient et un fichier de configs par client qui pilotait l’activation des fonctionnalités à coup de shouldActivateThisFeature: true.
+
+Résultat : on s’est retrouvés avec une app gigantesque avec des fichiers de 3k lignes qui contenaient les différentes logiques des différents clients. C’était impossible à tester, très difficile à isoler et l’évolution était très limitée.
+
+Comment on en est arrivé là ? Parce qu’il y a une incompréhension sur la définition de DRY.
+
+Ce n’est pas parce que quelque chose à le même nom que c’est la même chose.
+
+Ici, les applications avaient le même nom, les pages et fonctionnalités aussi, donc on a considéré que c’était la même chose. On a donc tout mis dans une seule et même app.
+
+Une solution viable aurait été de faire une app distincte par client où chacune d’entre elle déclarait son propre routing avec ses propres pages et de considérer chaque fonctionnalité comme une librairie consommable par les apps.
+
+Pensez toujours à respecter une separation of concerns dans vos applications. Si deux features semblent très similaires mais divergent en quelques points, c’est souvent le signal que ce sont en réalité deux features différentes.
+
+### Est-ce que mon architecture reflète mon besoin métier ?
+
+Ce point là est la résultante des deux précédents. En fait, une architecture qui reflète le besoin métier est la porte d’entrée vers une architecture agréable et évolutive.
+
+Ceci est l’un des principes du DDD (Domain Driven Design) : concevoir une application en suivant le contexte métier. Cela veut dire que mon architecture est le reflet de mon business, si bien qu’un PO/PM devrait pouvoir se balader dans mon repository et comprendre son architecture (j’exagère un peu mais pas tant).
+
+Il y a une phrase d’Arnaud Lemaire que j’aime beaucoup et qui résume une architecture DDD réussie : des petits changements métiers doivent entraîner des petits changements dans la codebase et des grands changements métiers doivent entraîner des grands changements dans la codebase.
+
+Bon, ceci étant dit, je ne ferai pas une explication exhaustive du DDD, déjà parce que ça pourrait tenir dans un bouquin, mais aussi parce que je ne prétends pas pouvoir le faire. En revanche, je peux vous expliquer comment appliquer certains de ses principes à la création d’architecture !
+
+Il y a notamment deux voies pour mettre en place une architecture qui suit la logique métier :
+
+1. un découpage de dossiers qui suit la navigation utilisateur
+2. de la colocation de code
+
+Le premier point consiste à avoir un folder routes avec les différentes routes de votre applications (vos pages). Et dans chacune des routes on a potentiellement des sous routes. En somme, le code de la page domain.com/products-list sera contenu dans routes/products-list. Certains frameworks disposent de ce principe de manière naturelle, par exemple NextJS ou AnalogJS. C’est ce qu’on appelle le file base routing. C’est très intéressant car ainsi la logique de notre structure de fichiers est liée et pilotée par le métier, l’évolution de notre codebase sera donc toujours fait au même rythme que le métier tout en ayant quelque chose de facilement compréhensible. L’avantage est que si vous avez un ticket de bug sur une page, vous saurez immédiatement où intervenir.
+
+Le second point concerne la colocation de code. Cela fait référence au fait de regrouper le code et les fichiers traitant du même domaine métier au même niveau dans votre arborescence de fichiers Cela assure une compréhension claire des dépendances des différentes parties de votre code et des potentielles effets de bords.
+
+Nous allons voir dans la section suivante des exemples d’architectures qui mettent en pratique tous les principes énumérées jusqu’ici.
+
+### La mise en pratique
+
+Je vous parlais de file base routing, voici comment faire l’équivalent dans Angular en partant d’une application en version 16 :
+
+```
+src/
+    app/
+        routes/
+            login/
+                login.route.ts
+            my-account/
+                profile/
+                    profile.route.ts
+                purchase-history/
+                    purchase-history.route.ts
+                my-account.route.ts
+                my-account.routing.ts
+            product/
+                product.route.ts
+            product-list/
+                product-list.route.ts
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+    index.html
+    main.ts
+ angular.json
+ package.json
+```
+
+Ici, la structure de mes fichiers suit parfaitement la navigation de l’utilisateur dans l’application. Si je suis sur la page domain.com/product alors je sais immédiatement où se trouve le code impliqué. Et à l’intérieur de chaque folder on retrouve la route en question avec leurs sous routes éventuelles (c’est le cas pour my-account). C’est le fichier app.routing.ts qui pilote le routing de premier niveau et celui de second niveau est géré par des fichiers comme my-account.routing.ts par exemple.
+
+C’est très pratique pour l’agréabilité comme je le disais plus haut, si vous avez un bug sur une page alors vous pourrez identifier en un clin d’œil où intervenir.
+Vous avez sans doute remarqué quelque chose : je ne suis pas la convention Angular et je nomme mes routes en xxx.route.ts. Cela me permet d’identifier rapidement ce qu’est ce fichier plutôt que de nommer tous mes composants xxx.component.ts. Je vous invite à faire de même !
+
+Maintenant, imaginez que vous avez un header et footer présents sur toutes vos pages et que vous voulez en faire deux composants. Ces composants vont être utilisés dans le AppComponent. Mais où allez vous les placer dans votre architecture ?
+
+La réponse est : au plus proche de là où ils sont utilisés. C’est le principe de colocation de code !
+
+```
+src/
+    app/
+        routes/
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+    index.html
+    main.ts
+ angular.json
+ package.json
+
+👆 Les composants sont au même niveau de leur endroit d’utilisation
+```
+
+Ainsi, des `xxx.component.ts` vivant à côté d’un `xxx.route.ts` signifient qu’ils sont utilisé dedans. Tout simplement ! Pas besoin d’utiliser de dossier `shared` ou `core` dans ce cas-là. Cela ne ferait que rajouter du bruit inutile.
+
+Je suis cette même logique pour toutes les routes et pas uniquement pour les composants :
+
+```
+src/
+    app/
+        routes/
+            login/
+            my-account/
+                profile/
+                purchase-history/
+                my-account.route.ts
+                my-account.routing.ts
+                sidebar.component.ts
+            product/
+            product-list/
+                product-list.route.ts
+                product-list.service.ts
+                product-list.store.ts
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+        initializer.service.ts
+        jwt.interceptor.ts
+    index.html
+    main.ts
+angular.json
+package.json
+```
+
+Et oui ! Je parie que vous n’aviez jamais vu ce genre d’approche avant. Et bien je peux vous assurer qu’après avoir essayé des tas d’approche, celle-ci apporte la meilleure DX au quotidien et sur le long terme.
+Ici donc, tout est aplati, on minimise les dossiers et on suit une règle simple : les fichiers qui sont utilisés ensemble sont côte à côte.
+Par exemple, j’ai besoin de créer un interceptor pour ajouter mon token JWT à chaque requête HTTP. Cet interceptor est utilisé dans mon app.config.ts donc je le place à son niveau !
+Il en va de même pour les guards, les services etc.
+
+C’est de la colocation de code. Le but est de comprendre en un clin d’œil les responsabilités et dépendances de mes fichiers.
+
+Vous allez peut-être vous dire qu’on va potentiellement avoir des dossiers avec 15 fichiers à l’intérieur, voire plus. En effet, et devinez quoi : c’est vraiment pas grave, au contraire !
+Croyez moi, les devs comprendront bien plus vite ce découpage là que d’obscurs dossiers core ou autres qui entraînent des réflexions supplémentaires et donc de potentielles erreurs et c’est là que la dette technique s’accumule.
+
+Prenez ces conseils comme des indications, si votre équipe se sent plus à l’aise avec un dossier par-ci par-là alors faites le, mais gardez toujours en tête la DX et de réduire les chances d’augmenter la dette technique.
+
+Bon, on garde les fichiers en commun ensemble au même endroit, très bien, mais qu’en est-il des éléments partagés ?
+
+Typiquement :
+
+- des composants UI
+- des features
+- des utilitaires
+
+Une solution est un dossier `shared` au même niveau que `routes` qui contient les éléments partagés de l’application.
+
+```
+src/
+    app/
+        routes/
+        shared/
+            components/
+            features/
+            utils/
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+        initializer.service.ts
+        jwt.interceptor.ts
+    index.html
+    main.ts
+angular.json
+package.json
+```
+
+Ainsi en tant que dev, si un élément est réutilisé à plusieurs endroits alors je le mettrais ici.
+
+Par exemples les composants :
+
+```
+src/
+    app/
+        routes/
+        shared/
+            components/
+                buttons/
+                cards/
+                form/
+                    input/
+                    textarea/
+                table/
+            features/
+            utils/
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+        initializer.service.ts
+        jwt.interceptor.ts
+    index.html
+    main.ts
+angular.json
+package.json
+```
+
+Ces composants représentent des éléments qui ne sont pas attachés à la logique métier exactement comme les composants de Angular Material par exemple.
+
+Il existe des solutions encore plus puissantes comme les design system. Un design system gère l’ensemble de l’apparence de votre métier, on y trouve les composants, les styles et les règles UI. Une méthodologie éprouvée pour la création de design system est l’Atomic Design. Je n’en parlerai pas ici car ce n’est pas le sujet mais je vous invite à faire vos propres recherches !
+
+Pour les utilitaires, rien de bien compliqué, on a des folders qui correspondent à nos besoins utilitaires :
+
+```
+src/
+    app/
+        routes/
+        shared/
+            components/
+            features/
+            utils/
+                converting/
+                formatting/
+                testing/
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+        initializer.service.ts
+        jwt.interceptor.ts
+    index.html
+    main.ts
+angular.json
+package.json
+```
+
+Pour les features, c’est la même idée. Une feature est un regroupement d’éléments métiers réutilisables. Cela peut être des stores, des services, de la UI ou même une combinaison de tout cela.
+
+```
+src/
+    app/
+        routes/
+        shared/
+            components/
+            features/
+                payment/
+                    cart.component.ts
+                    cart.store.ts
+                    index.ts
+                    payment.service.ts
+                user/
+                    has-role.guard.ts
+                    index.ts
+                    has-logged-in.guard.ts
+                    user.store.ts
+            utils/
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+        initializer.service.ts
+        jwt.interceptor.ts
+    index.html
+    main.ts
+angular.json
+package.json
+```
+
+Dans cette exemple nous avons deux features, payment et user. Chacun ayant un index.ts pour exposer l’API aux consommateurs.
+On peut facilement imaginer que dans mon application j’ai besoin des informations du user à plusieurs endroits, ainsi j’importe ce dont j’ai besoin depuis la feature user. Il en va de même pour payment, le service pourrait exposer des méthodes de paiement déclenchable à plusieurs endroits de mon application, et on peut imaginer que le cart soit affichable à plusieurs endroits également.
+
+Important : entendons nous bien, je possède un folder shared mais pas de SharedModule ou que sais-je encore. Le folder shared apporte l’indication que les éléments à l’intérieur sont réutilisés à plusieurs endroits, mais pas qu’ils sont tous packagés ensemble ! Ils ont tous leurs propres responsabilités et ne communique pas ensemble, comme les éléments dans routes par exemple.
+
+Bref, chaque feature est un sous-ensemble de mon domaine d’application et contient des éléments réutilisables. Dans l’idée si une fonctionnalité émerge pour une seule page de l’application alors elle ne devrait pas être dans shared/features/xxx. Par exemple si un administrateur à la possibilité de supprimer un user en faisant un http.delete sur un endpoint `user/${id}` via une page admin/delete-users alors en théorie cette logique devrait être contenue dans routes/admin/delete-users/delete-users.service.ts. Donc pas dans la feature user car cette fonctionnalité n’est pas partagée.
+
+Je dis bien “en théorie” car c’est typiquement sur ce genre de choix où on va adapter son architecture selon le métier et les préférences de l’équipe, on pourrait préférer mettre cette logiquement également dans la feature user pour certaines raisons. Et en poussant l’idée un peu plus loin, on pourrait même avoir ceci :
+
+```
+src/
+    app/
+        design-system/
+            components/
+                buttons/
+                cards/
+                form/
+                table/
+            styles/
+        features/
+            payment/
+            user/
+        routes/
+            login/
+            my-account/
+            product/
+            product-list/
+        utils/
+            converting/
+            formatting/
+            testing/
+        app.config.ts
+        app.component.ts
+        app.routing.ts
+        footer.component.ts
+        header.component.ts
+        initializer.service.ts
+        jwt.interceptor.ts
+    index.html
+    main.ts
+angular.json
+package.json
+```
+
+Ici, j’ai carrément fait sauter la notion de shared. Les composants sont déplacés dans un design-system, utils est directement à la racine ainsi que features signifiant qu’ils pourraient être partagés ou non.
+
+C’est, à mon sens, une architecture très solide (hormis monorepo) si l’équipe à un haut niveau de maturité. Le risque réside dans le fait de perturber l’agréabilité au quotidien, j’imagine facilement qu’une feature devienne mal isolée et qu’on y introduise des notions qui ne devraient pas y être. Préférez la colocation de code tant que c’est possible.
+
+### Pour aller plus loin
+
+Il y a beaucoup de méthodologies dont je n’ai pas parlé :
+
+- microfrontends
+- clean architecture
+- architecture hexagonale
+
+Ce sont des sujets poussés et qui nécessite un haut niveau de maturité technique mais qui peuvent apporter beaucoup à la pérennité de vos projets. Assurez vous de maîtriser les points précédents avant pour comprendre l’essence d’une bonne architecture avant de vous lancer dans ces recherches.
+
+### Résumé
+
+- Pensez toujours à vos collègues qui récupèreront votre code en priorisant la DX
+- Si je reçois un ticket qui me dit “il y a un bug sur cette feature”, je dois trouver où intervenir en quelques secondes
+- Si une nouvelle personne intègre l’équipe (et quelque soit son niveau de séniorité à peu de chose près) alors elle doit comprendre l’architecture en quelques minutes
+- L’organisation de vos fichiers doit être logique et consistant
+- Méfiez vous du DRY qui est parfois trompeur
+- Mettez un folder routes qui suivra la navigation de l’utilisateur
+- Aplatissez vos fichiers et utilisez de la colocation de code au maximum tant que cela respecte la separation of concerns
+- Utilisez un dossier shared pour y mettre des sous dossiers components, utils, features etc contenant vos éléments partagés
+- Alternativement, vous pouvez mettre ces sous dossiers directement à la racine au même niveau que routes
+- Considérez sérieusement l’approche monorepo avec NX
+
+### Conclusion
+
+Une architecture parfaite pour votre business mettra du temps à être mise en place. Il faudra faire, défaire et refaire régulièrement. Mais si vous suivez ces conseils et que vous priorisez la DX alors tout ce passera pour le mieux et vos collègues et clients/responsables vous remercieront !

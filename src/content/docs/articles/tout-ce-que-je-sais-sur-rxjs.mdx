@@ -1,0 +1,912 @@
+---
+title: Tout ce que je sais sur RxJS
+description: Tout ce que je sais sur RxJS
+---
+
+import { Image } from "astro:assets";
+
+:::note
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/tout-ce-que-je-sais-sur-rxjs-partie-1-7af99a9edded).
+
+S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
+:::
+
+L’autre jour un membre de ma communauté Discord a posé une question très intéressante
+
+<div style="display: flex; justify-content: center">
+  <Image
+    src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*U-8acQ7GrLZ40se4a8jLYA.png"
+    width="750"
+    height="350"
+    alt="pourquoi et quand utiliser un behaviorSubject au lieu d'un Observable?"
+  />
+</div>
+
+Je lui ai écrit une réponse qui m’a pris 45min à rédiger tant cette question implique beaucoup de choses. Et ça m’a donné l’envie de me lancer dans un article sur un sujet que j’aime : RxJS. Et la question Observable vs Subject est un bel angle par lequel étudier tout cela.
+
+Alors faisons un grand plongeon dans RxJS pour essayer de démystifier de manière la plus simple possible tous les rouages de cette librairie.
+
+---
+
+RxJS, ça devrait vous être familier. C’est une librairie qui permet de gérer l’asynchronicité des évènements et des données au sein d’une application Javascript, et RxJS est largement utilisé dans Angular.
+
+Et même si les Signal vont probablement réduire l’utilisation de la librairie, ce n’est pas prévu de si tôt et ça ne sera pas complètement le cas, alors faisons un point sur une question fondamentale qui va nous permettre de comprendre RxJS dans son intégralité : c’est quoi la différence entre un Observable et un Subject ?
+
+Avant de parler de leurs différences, parlons de leurs ressemblances.
+
+```ts
+import { Observable, Subject } from "rxjs";
+
+const obs = new Observable();
+const sub = new Subject();
+```
+
+Ce qu’on peut voir, c’est que ce sont tous les deux des class que l’on peut instancier.
+
+```ts
+import { Observable, Subject } from "rxjs";
+
+const obs = new Observable();
+const sub = new Subject();
+
+obs.subscribe((data) => console.log(`Obs ${data}`));
+sub.subscribe((data) => console.log(`Sub ${data}`));
+```
+
+Mais l’intérêt de ces deux class, c’est surtout qu’on peut s’abonner dessus avec la fonction subscribe. “S’abonner” veut dire qu’à l’instant où une donnée va être poussée dans l’Observable ou le Subject alors ces derniers vont émettre cette donnée, ainsi chaque abonné va recevoir cette nouvelle donnée immédiatement et ce qu’il y a dans le .subscribe()va se trigger.
+
+On peut donc en conclure que les Observable et Subject permettent de créer des flux de données, ce flux est continu, il ne s’interrompt pas (sauf si on lui dit explicitement). Et pour ouvrir ce flux de données, il faut s’abonner en utilisant .subscribe().
+
+Dans mon exemple je me suis abonné à la fois à obs et sub, ainsi dès qu’une donnée va être poussée dans l’un ou l’autre alors le console.log va s’exécuter.
+
+Mais pas avant !
+
+Ce que je veux dire par là, c’est que si j’exécute ce script, rien ne va s’afficher. Pourquoi ? Parce qu’à aucun moment je n’ai poussé de nouvelle donnée. Mes deux abonnements sont faits, les flux sont ouverts, mais étant donné que je n’ai pas encore poussé de donnée alors obsou sub n’émettent rien, donc je ne rentre pas dans le callback du tout.
+
+En résumé, voilà comment le déroulé de “vie” d’un Observable (ça marche pareil pour un Subject)
+
+1. Je créé l'Observable avec const obs = new Observable();
+2. Dans divers endroits de mon application je m’abonne à mon Observable en faisant obs.subscribe(...)
+3. Dès qu’une donnée est poussée dans l’ Observable (on va voir comment juste après) alors obs va l’émettre, en d’autres termes il va la pousser dans son flux
+4. Les abonnées vont recevoir cette donnée car ils écoutent le flux et pourront faire des trucs divers et variés avec cette donnée
+
+#### .next() pour pousser des données
+
+```ts
+import { Subject } from "rxjs";
+
+const sub = new Subject();
+
+sub.subscribe((data) => console.log(`Sub ${data}`));
+
+sub.next("Salut !");
+```
+
+Mesdames et messieurs, devant aux yeux ébahis je viens de pousser une donnée dans sub ! 👏
+
+Maintenant, que se passe t-il si j’exécute ce code ? Et bien vous l’aurez deviné, je verrais Sub Salut ! qui provient du console.log(`Sub ${data}`). Tout simplement parce que lorsque j’ai faitsub.next('Salut !), j’ai poussé une nouvelle donnée dans le Subject et ce dernier l’a émise, ainsi tous les abonnés l’ont reçues.
+
+Je dis bien “tous les abonnés” car je peux m’abonner plusieurs fois :
+
+```ts
+import { Subject } from "rxjs";
+
+const sub = new Subject();
+
+sub.subscribe((data) => console.log(`Sub1 ${data}`));
+sub.subscribe((data) => console.log(`Sub2 ${data}`));
+sub.subscribe((data) => console.log(`Sub3 ${data}`));
+
+sub.next("Salut !");
+```
+
+Ainsi, tous les abonnés vont recevoir cette même valeur. A noter que si j’avais mis le sub.next('Salut !'); avant les subscribe() alors les abonnés n’auraient reçu aucune donnée car la valeur aurait été émise avant un quelconque abonnement.
+
+#### Utiliser les Subject dans Angular
+
+Mais alors à quoi ça sert ? Comment tirer profit de cela ?
+
+Et bien RxJS est très utile dans le monde JS pour gérer des évènements de manières isolées. Par exemple si je veux que le clique d’un bouton mette à jour un compteur et que la valeur de ce compteur soit affiché dans plusieurs composants différents au sein de mon application, je peux utiliser un Subject. Ce Subject je vais le créer dans un fichier à part et pas directement dans un composant car sa valeur n’appartient à aucun composant en particulier. Et ce fichier, dans le cas de Angular, sera un service.
+
+```ts
+@Injectable({providedIn: 'root'})
+export class CounterService {
+  readonly count = new Subject<number>();
+
+  constructor() {
+    this.count.next(0); // j'initialise la valeur à 0
+  }
+
+  increment() {
+    this.count.next(???);
+  }
+
+}
+```
+
+Attendez une minute… Comment on fait pour récupérer la valeur actuelle de count pour l’incrémenter ?
+
+BehaviorSubject à la rescousse !
+
+```ts
+import { BehaviorSubject } from "rxjs";
+
+@Injectable({ providedIn: "root" })
+export class CounterService {
+  readonly count = new BehaviorSubject<number>(0);
+
+  increment() {
+    this.count.next(this.count.value + 1);
+  }
+}
+```
+
+BehaviorSubject c’est une autre class qui vient de RxJS et qui est très similaire à Subject, sauf que :
+
+- BehaviorSubject a une notion de “valeur courante”. Quand un BehaviorSubject émet une donnée, il va également l’enregistrer en son sein. Par conséquent, on a accès à la propriété .value qui va nous renvoyer cette valeur
+- Quand on initialise un BehaviorSubject on doit lui passer une valeur initiale, c’est exactement ce que je fais en faisant `readonly count = new BehaviorSubject<number>(0)`. Du coup, plus besoin de faire le this.count.next(0) dans le constructor !
+
+Plutôt pas mal non ? Je peux maintenant utiliser les valeurs émient par count en m’abonnant à celui-ci directement dans mes composants et également pousser une valeur incrémentée :
+
+```ts
+@Component({
+  standalone: true,
+  template: `
+    <p>Counter: {{ count }}</p>
+    <button (click)="counterService.increment()">+1</button>
+  `,
+})
+export class SomeComponent implements OnInit {
+  readonly countService = inject(CounterService);
+  count!: number;
+
+  ngOnInit() {
+    this.countService.count.subscribe((value) => (this.count = value));
+  }
+}
+```
+
+Je peux implémenter cette fonctionnalité partout où je veux dans mon application, certains autres composants pourraient utiliser une fonction decrement, ou simplement afficher la valeur de count. J’ai une application où la separation of concerns est respectée ! Le CounterService créé est ce qu’on appelle un “store” : une source de vérité qui contient mes données, le moyen d’accéder à ces données par d’autres briques de mon application, et les méthodes qui modifient ces données.
+
+En bref, utilisez BehaviorSubject lorsque vous voulez créé un store manuellement sans librairie tièrce ! C’est d’ailleurs ce qu’utilise NgRx sous la capot.
+
+Mais… Mon implémentation actuel est loin d’être parfaite ! Améliorons tout ça en introduisant une notion : les Observable.
+
+```ts
+import { Observable } from "rxjs";
+
+@Injectable({ providedIn: "root" })
+export class CounterService {
+  private readonly count = new BehaviorSubject<number>(0);
+  readonly count$ = this.count.asObservable();
+
+  increment() {
+    this.count.next(this.count.value + 1);
+  }
+}
+```
+
+Ici il y a deux différences :
+
+- J’ai créé une propriété publique count$ qui est égale à this.count.asObservable()
+- J’ai mis le BehaviorSubject en privé
+
+count$ est donc un Observable grâce à .asObservable(). Un Observable est un flux de données tout comme un Subject ce qui signifie qu’on peut faire un subscribe() dessus. Mais la grande différence est la suivante : sur un Observable on ne peut pas faire de .next().
+
+Un Observable est comme un Subject mais read-only, on ne peut pas lui pousser des données. C’est donc très utile pour exposer aux autres parties de mon application des données sans leurs donner la possibilité de les modifier directement car cette responsabilité incombe au service où est déclarée ma donnée.
+
+Je peux donc changer le code de mon composant afin d’utiliser count$, j’en profite le rendre plus optimal en utilisant le pipe async qui a pour but subscribe automatiquement et de unsubscribe quand mon composant est détruit (par exemple quand je change de page) :
+
+```ts
+@Component({
+  standalone: true,
+  template: `
+    <p>Counter: {{ countService.count$ | async }}</p>
+    <button (click)="counterService.increment()">increment</button>
+  `,
+})
+export class SomeComponent {
+  readonly countService = inject(CounterService);
+}
+```
+
+#### Comment fonctionne les Observable
+
+Allons plus loin dans la découverte des Observable en n’en créant un.
+
+```ts
+import { Observable } from "rxjs";
+
+const obs = new Observable();
+```
+
+Comme je le disais plus haut, cet obs ne fait rien, en réalité on ne créé jamais d’ Observable comme ça car un Observable attend une fonction en callback :
+
+```ts
+import { Observable } from "rxjs";
+
+const obs = new Observable((subscriber) => {
+  subscriber.next("Salut !");
+});
+
+obs.subscribe((data) => console.log(data)); // Salut !
+```
+
+C’est en réalité dans le callback d’un Observable que l’on doit faire notre .next(), et on le fait sur l’argument subscriber qui correspond en réalité au flux de données que chaque abonné écoutera lorsqu’il fera .subscribe().
+
+```ts
+import { Observable } from "rxjs";
+
+const obs = new Observable((subscriber) => {
+  subscriber.next("Salut ");
+  subscriber.next("comment ");
+  subscriber.next("ça va ?");
+});
+
+obs.subscribe((data) => console.log(data));
+```
+
+Ici je vais bel et bien avoir 3 console.log() comme ceci :
+
+```
+Salut ! // premier console.log
+comment // deuxième console.log
+ça va ? // troisième console.log
+```
+
+Mon Observable, et plus particulièrement son callback, fait 3 .next() sur le flux de données, poussant donc 3 valeurs, ainsi au moment où je vais subscribe() le flux va émettre trois fois, donc je passerai 3 fois à l’intérieur du subscribe().
+
+Il est important de comprendre que c’est le fait de .subscribe() qui déclenche l’ouverture du flux et donc qui trigger le callback passé dans le Observable. C’est exactement comme le http.get() (et les autres requêtes) du HttpClient de Angular, si je ne subscribe() pas, le call http ne se lance pas. A chaque fois qu’on va subscribe() ça déclenchera un nouveau call http et créera un nouveau flux indépendant.
+
+#### `Observable` et valeurs dynamiques
+
+Les Observable ne vont pas systématiquement pousser des données statiques !
+
+```ts
+import { Observable } from "rxjs";
+
+const rand = new Observable((subscriber) => {
+  subscriber.next(Math.random());
+});
+
+rand.subscribe((data) => console.log(data)); // 0.159812
+rand.subscribe((data) => console.log(data)); // 0.811699
+rand.subscribe((data) => console.log(data)); // 0.422368
+```
+
+Comme vous le voyez, la donnée que l’on pousse dans le .next() n’est pas forcément une valeur figée. Ici c’est Math.random() que je pousse. De ce fait à chaque subscribe() le Math.random() va être executé, on aura donc une valeur différente.
+
+Un autre exemple :
+
+```ts
+const counter = new Observable((subscriber) => {
+  let counter = 0;
+  setInterval(() => {
+    subscriber.next(counter++);
+  }, 1000);
+});
+
+counter.subscribe((data) => console.log(data)); // émet toutes les secondes
+
+// 5 secondes plus tard je m'abonne à nouveau
+setTimeout(() => {
+  counter.subscribe((data) => console.log(data)); // émet toutes les secondes
+}, 5000);
+```
+
+counter déclenche un intervalle où chaque seconde une nouvelle donnée est poussée, donc chaque abonnement va créer un nouvel intervalle. J’ai fait démarrer le second abonnement 5 secondes plus tard juste pour vous montrer que les flux sont vraiment indépendants.
+
+Et c’est une différence fondamentale entre les Observable et les Subject !
+
+- Avec les Observables, chaque abonné créé un flux de données indépendant entre lui et l’ Observable dès qu’il .subscribe(). On dit alors que les Observable font du unicasting.
+- Avec les Subject, tous les abonnés se branchent au même flux de données en faisant un .subscribe()et dès que le Subject émet suite à un .next() alors les abonnés vont tous recevoir cette nouvelle valeur. On dit alors que les Subjectfont du multicasting.
+
+Et cette différence repose uniquement sur la question de l’endroit où se fait le .next(), et en réalité c’est tout à fait logique, regardez cet exemple :
+
+```ts
+import { Observable, Subject } from "rxjs";
+
+const randObs = new Observable((subscriber) => {
+  subscriber.next(Math.random());
+});
+
+randObs.subscribe(console.log);
+randObs.subscribe(console.log);
+randObs.subscribe(console.log);
+
+const randSub = new Subject();
+
+randSub.subscribe(console.log);
+randSub.subscribe(console.log);
+randSub.subscribe(console.log);
+
+randSub.next(Math.random());
+```
+
+Les trois abonnés sur randObs sont complètement indépendant, et dès qu’ils ont subscribe() ils ont créé un nouveau flux et relancer un nouveau Math.random(), donc ils n’ont pas reçu la même valeur !
+
+Tandis que pour le Subject, j’ai d’abord créé trois abonnements puis je pousse un nouveau Math.random() donc les trois abonnements vont bien recevoir la même chose !
+
+C’est également le cas avec un BehaviorSubject :
+
+```ts
+const randSub = new BehaviorSubject(Math.random());
+
+randSub.subscribe(console.log);
+randSub.subscribe(console.log);
+randSub.subscribe(console.log);
+```
+
+Les trois abonnés vont recevoir la même donnée initiale, pourquoi ? Et bien tout simplement parce qu’un BehaviorSubject exécute ce qu’on lui passe en paramètre dès qu’il se créé.
+
+#### Le parallèle avec Angular
+
+Bon, c’est intéressant tout ça, mais comment ça s’inscrit dans la logique de création d’un application Angular ?
+
+En fait, vous n’allez quasiment jamais faire de new Observable, en tout cas personnellement en 7 ans d’utilisation d’Angular je ne l’ai pas fait une seule fois. Tandis que new Subject ou new BehaviorSubject est relativement commun (moins si vous utilisez une librairie de State Management car celles-ci l’utilisent déjà sous le capot), ça vous servira à créer ce pattern où vous aurez une donnée indépendante que vous pourrez lire et écrire depuis n’importe quel composant ou service en respectant une separation of concerns.
+
+En revanche, vous allez beaucoup utiliser les Observables mis à disposition par Angular :
+
+- Le `HttpClient` et ses requêtes qui renvoient des `Observables`
+- `ActivatedRoute` qui permet de s’abonner à la route courante
+- `valueChanges` pour écouter les changements de valeurs des différents champs d’un formulaire
+- Et bien d’autres
+
+D’ailleurs on peut facilement imaginer ce à quoi pourrait ressembler l’implémentation de `http.get()` de Angular :
+
+```ts
+const httpGet = (endpoint: string) => new Observable(subscriber => {
+  // ici il y a la requêtte HTTP avec xhr en
+  // utilisant l'endpoint en paramètre
+  const resultFromHttpRequest = ...;
+  subscriber.next(dataFromHttpRequest);
+  subscriber.complete()
+})
+```
+
+Bien entendu la vraie implémentation de la fonction est plus complexe car on gère les erreurs, les side effects, le HttpHeader etc, mais dans l’idée c’est bien ça ! Le subscriber.complete() sert à couper le flux de tous les abonnés, dans les requêtes de HttpClient c’est fait automatiquement.
+
+D’ailleurs en parlant de ça, subscribe() ne prend pas forcément qu’une fonction callback, on peut aussi lui passer un objet pour préciser quoi faire en cas d’erreur ou lors du complete (quand le flux est coupé) :
+
+```ts
+const obs = new Observable((subscriber) => {
+  try {
+    subscriber.next(Math.random());
+    subscriber.complete();
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+obs.subscribe({
+  next: (data) => console.log(data),
+  error: (error) => console.error(error),
+  complete: () => console.log("complete"),
+});
+```
+
+- next() va s’exécuter à chaque émission de nouvelle donnée
+- error va s’exécuter quand obs va lever une erreur
+- complete va s’exécuter quand le flux va se couper
+
+#### Les opérateurs
+
+Ces outils puissants (et parfois difficiles à maîtriser) vous permettront d’appréhender la programmation réactive au sein de vos applications Angular. Pour guider la suite de cette article, nous tenterons de répondre à deux questions :
+
+1. Qu’est-ce qu’un opérateur RxJS?
+2. Quels sont les opérateurs les plus utilisés et pour quelles raisons ?
+
+##### Qu’est-ce qu’un opérateur RxJS ?
+
+Comme vous le savez déjà, un Observable est un mécanisme de gestion de flux de données. Chaque fois qu’une donnée est injectée dans un Observable (via une méthode .next()), cette donnée est émise à tous les abonnés (via un subscribe()ou | async).
+
+C’est là qu’interviennent les opérateurs. Leur rôle est d’intervenir dans le flux de données et de faire quelque chose à chaque émission, par exemple transformer la donnée, la filtrer, et bien d’autres encore.
+
+Il existe également des opérateurs qui vont créer des Observables à partir de rien, ceux-là ne vont donc pas modifier les valeurs émient mais bel et bien construire leurs propres flux.
+
+Il existe donc deux grandes catégories d’opérateurs :
+
+1. les opérateurs de réaction, car ils font quelque chose à chaque émission de donnée
+2. les opérateurs de création, car ils permettent de créer des Observables
+
+Voici un exemple qui illustre comment utiliser les opérateurs dans un contexte Angular :
+
+```ts
+import { interval } from "rxjs";
+
+@Component({
+  template: `Compteur : {{ counter$ | async }}`,
+})
+export class AppComponent {
+  // va émettre 0..1..2..3..4.. chaque seconde dès qu'on s'abonne
+  readonly counter$ = interval(1000);
+}
+```
+
+Dans cet exemple, grâce à l’opérateur de création interval(), j’ai crée un Observable qui va émettre 1, puis 2, puis 3, puis 4 etc chaque seconde (car j’ai précisé 1000 dans ses paramètres) dès lors qu’on s’abonne dessus, c’est donc utile pour faire des compteurs.
+
+Maintenant, admettons que j’ai envie de doubler la valeur de chacune des émissions. Je pourrais faire comme ça :
+
+```ts
+import { interval } from "rxjs";
+
+@Component({
+  template: `Compteur : {{ counter }}`,
+})
+export class AppComponent {
+  doubleCounter = 0;
+  readonly counter$ = interval(1000).subscribe(
+    (value) => (this.doubleCounter = value * 2)
+  );
+}
+```
+
+Cela marcherait très bien, mais imaginez que j’ai besoin de ce compteur doublé à plusieurs endroits dans mon application, je devrais refaire ça à chaque fois, donc pas top pour d’éventuelles évolutions ou refacto et en plus il faut penser au unsubscribe.
+
+Et c’est exactement là que les opérateurs entrent en jeu.
+
+```ts
+import { interval, map } from "rxjs";
+
+@Component({
+  template: `Compteur : {{ doubleCounter$ | async }}`,
+})
+export class AppComponent {
+  // va émettre 0..2..4..6..8.., chaque seconde
+  readonly doubleCounter$ = interval(1000).pipe(map((value) => value * 2));
+}
+```
+
+Les opérateurs se mettent dans myObs$.pipe(...), il faut vraiment le voir comme une opération qui se déclenche à chaque émission. Ici, j’utilise l’opérateur map qui a pour but de transformer la donnée à chaque émission, et là en l’occurrence je double sa valeur.
+
+Et ce qui est formidable (et très important), c’est qu’on peut enchainer les opérateurs dans la fonction pipe.
+
+```ts
+import { interval, map } from "rxjs";
+
+@Component({
+  template: `Compteur : {{ doubleCounter$ | async }}`,
+})
+export class AppComponent {
+  readonly doubleCounter$ = interval(1000).pipe(
+    tap((value) => console.log(value)), // 0..1..2..3..
+    map((value) => value * 2), // double la donnée à chaque émission
+    tap((value) => console.log(value)), // 0..2..4..6..
+    filter((value) => value > 10) // bloque les émissions si inférieur à 10
+  );
+}
+```
+
+Ici on fait pleins de trucs :
+
+- `tap` a pour but d’effectuer des effets de bords, c’est à dire qu’on ne modifie pas le flux actuel, mais on y a accès quand même. Ici je l’utilise deux fois, la première fois pour faire un console.log AVANT le map et la seconde fois APRES. C’est très utile pour se rendre compte de ce qu’émet notre Observable.
+- `map` modifie chaque émission, comme dit précédemment.
+- `filter` qui va bloquer les émissions si la valeur renvoyée par la fonction est false. Ici donc l’Observable ne va émettre que si la valeur est plus grande que 10.
+
+Les opérateurs sont donc un excellent moyen de contrôler nos flux de données ! C’est difficile de se rendre compte de la puissance des opérateurs donc je vous invite à essayer par vous-même sur ce lien Stackblitz.
+
+##### Mais à quoi ça sert tout ça ?
+
+“Je pourrais faire la même chose avec une fonction qui utilise un setInterval et quelques if non ?”
+
+C’est vrai, mais RxJS vous ouvre les voies de la programmation réactive et déclarative. C’est à dire que vous déclarez ce qui doit se passer en réponse à certains événements, sans avoir à vous soucier des détails de mise en œuvre.
+
+Avec setInterval, vous devez gérer manuellement les cas où vous souhaitez arrêter l’intervalle, reprendre l’intervalle ou gérer des erreurs.
+
+Par contre, avec l’opérateur interval de RxJS, vous obtenez un Observable qui émet des événements à un intervalle régulier. Cet Observable peut être facilement composé avec d’autres Observables, manipulé avec d’autres opérateurs, ou arrêté ou repris à tout moment. En cas d’erreur, vous pouvez gérer cela de manière déclarative avec les opérateurs d’erreur.
+
+Le véritable pouvoir de RxJS réside dans la combinaison de ces opérateurs pour créer des flux de données complexes et gérables de manière très lisible et maintenable.
+
+Par exemple, imaginez que vous souhaitez émettre un événement toutes les secondes, mais seulement pendant les 10 premières secondes. Avec setInterval, vous devriez mettre en place un compteur, un if pour vérifier le compteur, et un clearInterval pour arrêter l’émission. Avec RxJS, vous pouvez simplement combiner les opérateurs interval et take :
+
+```ts
+import { interval } from "rxjs";
+import { take } from "rxjs/operators";
+
+interval(1000).pipe(take(10)).subscribe(console.log);
+```
+
+Cela émettra un nombre croissant chaque seconde, de 0 à 9. C’est la beauté de la programmation réactive : vous déclarez ce que vous voulez faire, et RxJS s’occupe du comment. Je prépare un article sur la programmation réactive qui devrait sortir au mois de juillet !
+
+Ok, maintenant que l’intro est faite, découvrons ensemble les opérateurs RxJS les plus fréquents qui vous suffiront pour 99% des scénarios.
+
+#### Les opérateurs de création
+
+##### of()
+
+Cet opérateur permet de créer un Observable à partir d’une valeur qu’on lui passe.
+
+```ts
+import { of } from "rxjs";
+
+const products$ = of([
+  { id: 1, name: "product1", price: 10 },
+  { id: 2, name: "product2", price: 30 },
+  { id: 3, name: "product3", price: 5 },
+]).subscribe(console.log);
+// affiche le tableau passé en argument.
+```
+
+Cela peut être utile lorsque vous devez créer rapidement un Observable à partir de valeurs statiques, par exemple dans un service pour simuler une donnée qui viendrait du backend.
+
+##### interval
+
+Crée un Observable qui émet une séquence infinie de valeurs entières à intervalles réguliers.
+
+```ts
+import { interval } from "rxjs";
+
+const counter = interval(1000).subscribe(console.log);
+// affiche 0..1..2..3..4 chaque seconde
+```
+
+C’est utile pour créer des compteurs, des délais ou des intervalles de temps, par exemple pour une fonctionnalité de minuterie dans une application.
+
+##### combineLatest
+
+Cet opérateur combine les dernières valeurs de plusieurs Observables. Il émet une nouvelle valeur chaque fois que l’un des Observables qu’il combine émet une valeur. Il est à noter que combineLatest ne va pas émettre tant que chacun de ses Observables n’a pas émis au moins une valeur.
+
+```ts
+import { combineLatest, of } from "rxjs";
+import { delay } from "rxjs/operators";
+
+const products$ = http.get("api/products");
+const orders$ = http.get("api/orders");
+const result$ = combineLatest({ products: products$, orders: orders$ });
+
+result$.subscribe(({ products, orders }) => {
+  console.log(products);
+  console.log(orders);
+});
+```
+
+C’est pratique lorsque vous voulez combiner les résultats de plusieurs requêtes HTTP ou lorsque vous souhaitez synchroniser plusieurs flux de données pour faire une opération basée sur plusieurs flux.
+
+##### merge
+
+Cet opérateur combine plusieurs Observables en un seul, en émettant les valeurs de chaque Observable dès qu’elles sont disponibles.
+
+```ts
+import { merge, of } from "rxjs";
+import { delay } from "rxjs/operators";
+
+const obs1 = of("Hello");
+const obs2 = of("World").pipe(delay(1000));
+const merged = merge(obs1, obs2);
+
+merged.subscribe((value) => console.log(value));
+// Affiche 'Hello', puis 'World' après un délai
+```
+
+Utile lorsque vous voulez fusionner plusieurs flux de données en un seul, par exemple lors de l’agrégation de données à partir de plusieurs sources de données dans divers services.
+
+##### defer
+
+Il permet de retarder la création de l'Observable jusqu'à ce qu'un Observateur s'y abonne. Cela signifie que l'Observable n'est créé qu'au moment de l'abonnement, ce qui permet de s'assurer que l'Observable encapsule toujours les données les plus à jour.
+
+```ts
+import { defer } from "rxjs";
+
+const currentTime$ = defer(() => of(new Date().getTime()));
+
+currentTime$.subscribe(console.log);
+// 👆 m'affiche bien le moment actuel
+// qu'importe à quel moment je subscribe
+// si j'avais utilisé simplement of(new Date().getTime())
+// alors cela m'aurait retourné le même résultat à chaque subscribe
+```
+
+C’est utile quand vous voulez retarder l’exécution de la fonction qui génère l’Observable jusqu’à ce qu’un abonné soit présent.
+
+#### Les opérateurs de réaction
+
+##### map
+
+Cet opérateur est utilisé pour appliquer une fonction à chaque valeur émise par l’Observable source.
+
+```ts
+import { of } from "rxjs";
+import { map } from "rxjs/operators";
+
+const nums = of(1, 2, 3);
+const squareNums = nums.pipe(map((n) => n * n));
+
+squareNums.subscribe((x) => console.log(x)); // Affiche 1, 4, 9
+```
+
+C’est utile lorsque vous voulez transformer les données reçues d’un Observable, par exemple pour reformater les données reçues d’une API.
+
+##### mergeMap
+
+Il permet de gérer les situations où on voudrait subscribe dans un subscribe. C’est à dire les situations où les valeurs émient par le flux de données sont elles-mêmes des Observable ou bien qu’on veut renvoyer un Observable grâce à la donnée émise. mergeMap va s’abonner à la valeur et renvoyer le résultat de l’abonnement.
+
+```ts
+import { mergeMap } from 'rxjs/operators';
+
+@Component(...)
+export class AppComponent {
+  http = inject(HttpClient);
+  productID$ = new FormControl();
+
+  product$ = productID$.pipe(
+    mergeMap(productID => this.http.get(`api/products/${productID}`))
+  )
+}
+```
+
+Il est particulièrement utile pour gérer les scénarios où chaque valeur émise par un Observable est elle-même un Observable, comme lors de l’envoi de requêtes HTTP en réponse à des événements de l’utilisateur.
+
+##### switchMap
+
+Cet opérateur est similaire à mergeMap(), mais annule les valeurs précédentes chaque fois qu'une nouvelle valeur est émise.
+
+```ts
+import { switchMap } from 'rxjs/operators';
+
+@Component(...)
+export class AppComponent {
+  http = inject(HttpClient);
+  productID$ = new FormControl();
+
+  // si productID$ émet avant que le http.get se termine
+  // alors le call HTTP sera cancel et remplacé par le suivant
+  product$ = productID$.pipe(
+    switchMap(productID => this.http.get(`api/products/${productID}`))
+  )
+}
+```
+
+C’est pratique lorsque vous voulez ignorer les anciennes valeurs en faveur des nouvelles, par exemple lors de l’implémentation d’une fonction de recherche autocomplète où seule la dernière requête est pertinente.
+
+##### exhaustMap
+
+Cet opérateur est aussi similaire à mergeMap(), mais il ignore les nouvelles valeurs tant que chaque valeur émise n'a pas terminé.
+
+```ts
+import { exhaustMap } from 'rxjs/operators';
+
+@Component(...)
+export class AppComponent {
+  http = inject(HttpClient);
+  productID$ = new FormControl();
+
+  // si productID$ émet avant que le http.get se termine
+  // alors cette émission sera ignorée
+  product$ = productID$.pipe(
+    exhaustMap(productID => this.http.get(`api/products/${productID}`))
+  )
+}
+```
+
+C’est utile dans des situations où vous voulez ignorer les nouvelles valeurs jusqu’à ce que chaque valeur émise ait terminé son traitement, comme lors de la gestion des clics sur un bouton pour empêcher les doubles soumissions.
+
+##### filter
+
+Cet opérateur émet uniquement les valeurs qui satisfont une certaine condition.
+
+```ts
+import { of } from "rxjs";
+import { filter } from "rxjs/operators";
+
+const nums = of(1, 2, 3, 4, 5);
+const evens = nums.pipe(filter((n) => n % 2 === 0));
+
+evens.subscribe((x) => console.log(x)); // Affiche 2, 4
+```
+
+Il est utile lorsque vous voulez filtrer certains résultats, par exemple en filtrant certaines entrées utilisateur ou certains résultats d’une API.
+
+##### scan
+
+Cet opérateur fonctionne comme reduce() pour les tableaux. Il applique une fonction à chaque valeur émise par l'Observable source et émet le résultat cumulatif.
+
+```ts
+import { of } from "rxjs";
+import { scan } from "rxjs/operators";
+
+const nums = of(1, 2, 3);
+const sum = nums.pipe(scan((acc, curr) => acc + curr, 0));
+
+sum.subscribe((x) => console.log(x)); // Affiche 1, 3, 6
+```
+
+C’est utile lorsque vous voulez accumuler des valeurs au fil du temps, par exemple pour calculer une somme totale ou pour construire un tableau de valeurs émises.
+
+##### distinctUntilChanged
+
+Cet opérateur émet une valeur uniquement si elle est différente de la dernière valeur émise.
+
+```ts
+import { of } from "rxjs";
+import { distinctUntilChanged } from "rxjs/operators";
+
+const nums = of(1, 1, 2, 2, 3, 3);
+const distinctNums = nums.pipe(distinctUntilChanged());
+
+distinctNums.subscribe((x) => console.log(x)); // Affiche 1, 2, 3
+```
+
+C’est utile lorsque vous voulez ignorer les valeurs en double, par exemple lorsqu'on créé un strore fait-maison ou chaque selector utilise distinctUntilChanged() pour éviter d’émettre à nouveau si la valeur est la même.
+
+##### tap
+
+Cet opérateur est utilisé pour effectuer des effets de bord. Il applique une fonction à chaque valeur émise par l’Observable source, mais retourne la valeur sans la modifier.
+
+```ts
+import { of } from "rxjs";
+import { tap } from "rxjs/operators";
+
+const nums = of(1, 2, 3).pipe(tap(console.log)).subscribe();
+```
+
+C’est utile lorsque vous voulez déclencher une action secondaire en réaction à une valeur émise, la mise à jour d’un état (loader par exemple) ou un console.log() pour regarder l’état du flux.
+
+##### delay
+
+Permet de décaler le moment où les valeurs émises par un Observable sont réellement émises. Cela retarde essentiellement l'émission de chaque valeur d'un certain nombre de millisecondes.
+
+```ts
+import { delay } from "rxjs/operators";
+
+const data$ = of({ some: "data" });
+
+data$.pipe(delay(2000)).subscribe(console.log);
+// affiche l'objet passé en paramètre mais au bout de 2 secondes
+```
+
+C’est utile lorsque vous voulez retarder une action, comme l’affichage d’un message de succès après une action de l’utilisateur.
+
+##### take
+
+Cet opérateur n’émet que les n premières valeurs puis complète l'Observable.
+
+```ts
+import { interval } from "rxjs";
+import { take } from "rxjs/operators";
+
+const numbers = interval(1000);
+const takeFourNumbers = numbers.pipe(take(4));
+
+takeFourNumbers.subscribe(console.oog);
+// Affiche la valeur quatre fois puis se complète
+```
+
+C’est utile lorsque vous ne voulez traiter qu’un certain nombre de valeurs, comme pour paginer les résultats d’une requête ou limiter le nombre de tentatives d’une action.
+
+##### takeUntil
+
+Cet opérateur complète l’Observable dès qu’une autre Observable émet une valeur.
+
+```ts
+import { interval, of } from "rxjs";
+import { takeUntil, delay } from "rxjs/operators";
+
+const numbers = interval(1000);
+const stopper = of(true).pipe(delay(3500));
+const takeUntilStopped = numbers.pipe(takeUntil(stopper));
+
+takeUntilStopped.subscribe(console.log);
+// Affiche la valeur jusqu'à ce que stopper émette une valeur
+```
+
+C’est utile lorsque vous voulez arrêter une action dès qu’un autre événement se produit, comme arrêter un intervalle lorsqu’un utilisateur clique sur un bouton ou unsubscribe d’un flux.
+
+##### takeWhile
+
+Cet opérateur émet des valeurs tant qu’une condition est vraie et complète l’Observable dès que la condition devient fausse.
+
+```ts
+import { interval } from "rxjs";
+import { takeWhile } from "rxjs/operators";
+
+const numbers = interval(1000);
+const takeWhileLessThanFive = numbers.pipe(takeWhile((n) => n < 5));
+
+takeWhileLessThanFive.subscribe(console.log);
+// Affiche la valeur tant que n est inférieur à 5
+```
+
+C’est utile lorsque vous voulez continuer à émettre des valeurs en fonction d’une condition, comme arrêter un défilement automatique quand l’utilisateur atteint le bas de la page.
+
+##### skip
+
+Cet opérateur ignore les n premières valeurs émises par l'Observable source.
+
+```ts
+import { interval } from "rxjs";
+import { skip } from "rxjs/operators";
+
+const numbers = interval(1000);
+const skipTwoNumbers = numbers.pipe(skip(2));
+
+skipTwoNumbers.subscribe(console.log);
+// Ignore les deux premières valeurs
+```
+
+C’est utile lorsque vous voulez ignorer les premières valeurs, comme lors de la mise en place d’une fonction de pagination.
+
+##### debounceTime
+
+Cet opérateur n’émet une valeur que si un certain temps s’est écoulé sans qu’une autre valeur soit émise.
+
+```ts
+import { debounceTime } from "rxjs/operators";
+
+inputFormControl = new FormControl();
+
+inputFormControl.valueChanges.pipe(debounceTime(300)).subscribe(console.log);
+// Émet une valeur 300ms après la dernière saisie de l'utilisateur
+```
+
+C’est utile lorsque vous voulez limiter le taux de traitement, comme pour éviter de faire trop de requêtes pendant la frappe de l’utilisateur dans une recherche en direct.
+
+##### catchError
+
+Cet opérateur attrape les erreurs sur l’Observable source et permet de renvoyer un nouvel Observable.
+
+```ts
+import { catchError } from 'rxjs/operators';
+
+@Component(...)
+export class AppComponent {
+  http = inject(HttpClient);
+
+  products$ = this.http.get('api/products').pipe(
+      catchError(error => {
+        console.error('Une erreur est survenue lors de la récupération des données :', error);
+        // On peut afficher un message d'erreur également
+
+        // On retourne un Observable avec des données par défaut en cas d'erreur
+        return of({ data: 'Données par défaut' });
+      })
+    );
+
+}
+
+```
+
+C’est utile lorsque vous voulez gérer les erreurs et peut-être remplacer les valeurs erronées par des valeurs par défaut.
+
+##### retry
+
+Cet opérateur re-souscrit à l’Observable source si une erreur est produite, en permettant un certain nombre de tentatives.
+
+```ts
+import { retry } from 'rxjs/operators';
+
+@Component(...)
+export class AppComponent {
+  http = inject(HttpClient);
+
+  products$ = this.http.get('api/products').pipe(
+    retry(3) // Réessaye la requête HTTP 3 fois en cas d'erreur
+  );
+
+}
+```
+
+C’est utile lorsque vous voulez réessayer une action en cas d’erreur, comme pour retenter une requête HTTP qui a échoué.
+
+##### startWith
+
+Cet opérateur fait en sorte que l’Observable source commence par émettre une ou plusieurs valeurs spécifiques.
+
+```ts
+import { of } from "rxjs";
+import { startWith } from "rxjs/operators";
+
+const numbers = of(1, 2, 3);
+const startWithZero = numbers.pipe(startWith(0));
+
+startWithZero.subscribe((x) => console.log(x)); // Affiche 0, 1, 2, 3
+```
+
+C’est utile lorsque vous voulez fournir des valeurs initiales, comme pour pré-remplir un champ de formulaire ou afficher une valeur par défaut pendant le chargement des données.
+
+#### Conclusion
+
+Les opérateurs RxJS sont des outils puissants qui nous permettent de manipuler et de contrôler les flux de données dans nos applications Angular. Ils peuvent transformer les valeurs émises, filtrer les valeurs selon certaines conditions, retarder l’émission de valeurs, répéter des flux de données, parmi tant d’autres opérations.
+
+Le plus important n’est pas nécessairement de connaître tous les opérateurs mais avant tout de comprendre le logique
+
+Nous avons exploré les opérateurs les plus couramment utilisés dans ce deuxième volet, chacun avec ses propres utilisations et avantages. Bien que nous ayons couvert beaucoup de terrain, il y a encore beaucoup plus d’opérateurs à découvrir. Je vous encourage à explorer le site RxMarbes qui recense tous les opérateurs avec des diagrammes interactifs.
