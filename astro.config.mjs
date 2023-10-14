@@ -38,12 +38,12 @@ export default defineConfig({
         {
           label: "📕 Articles",
           autogenerate: { directory: "articles" },
-          collapsed: true,
+          collapsed: false,
         },
         {
           label: "😎 Tips",
           autogenerate: { directory: "tips" },
-          collapsed: true,
+          collapsed: false,
         },
       ],
     }),
