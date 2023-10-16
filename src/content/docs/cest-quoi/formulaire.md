@@ -5,34 +5,45 @@ sidebar:
   label: Formulaire
 ---
 
-Un formulaire est un ensemble de champs qui permettent de collecter des données. Dans Angular, il existe deux types de formulaires :
+Dans Angular, il existe deux types de formulaires :
 
 -   Les formulaires réactifs
 -   Les formulaires template-driven
 
-## Les formulaires réactifs
+Bien que les deux types de formulaires permettent de faire la même chose, leurs utilisations diffèrent et ont des avantages et des inconvénients.
 
-Les formulaires réactifs sont des formulaires qui sont créés à l'aide de la classe `FormGroup`. Cette classe permet de créer un groupe de champs qui peuvent être validés et soumis.
+### Les formulaires réactifs (ReactiveFormsModule)
+
+Le principe des formulaires réactifs est de créer un objet qui représente le formulaire. Cet objet est ensuite lié à un `<form>` dans le template.
 
 Par exemple, imaginons un formulaire qui permet de créer un utilisateur :
 
 ```ts
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-user-form',
-  templateUrl: './user-form.component.html'
+  standalone: true,
+  template: `
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div>
+        <label for="name">Nom</label>
+        <input type="text" id="name" formControlName="name" />
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" formControlName="email" />
+      </div>
+      <button type="submit">Envoyer</button>
+    </form>
+  `,
+  imports: [ReactiveFormsModule]
 })
 export class UserFormComponent {
-  form: FormGroup;
-
-  constructor(private formBuilder: FormBuilder) {
-    this.form = this.formBuilder.group({
-      name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
-    });
-  }
+  protected readonly form = new FormGroup({
+    name: new FormControl('', Validators.required),
+    email: new FormControl('', [Validators.required, Validators.email])
+  });
 
   onSubmit() {
     if (this.form.valid) {
@@ -42,22 +53,64 @@ export class UserFormComponent {
 }
 ```
 
-## Les formulaires template-driven
+La première étape consiste à importer `ReactiveFormsModule`, cela permet d'avoir accès aux directives `formGroup` et `formControlName` et également d'ajouter l'event `ngSubmit` sur le `<form>`.
 
-Les formulaires template-driven sont des formulaires qui sont créés à l'aide de directives. Ces directives permettent de créer un groupe de champs qui peuvent être validés et soumis.
+Ensuite, il faut créer un objet `FormGroup` qui représente le formulaire. Cet objet est composé de plusieurs `FormControl` qui représentent les champs du formulaire avec leurs valeurs initiales et leurs validateurs.
+
+Enfin, il faut lier le `FormGroup` au `<form>` avec la directive `formGroup` et chaque `FormControl` aux champs du formulaire avec la directive `formControlName`.
+
+Maintenant, il ne me reste plus qu'à soumettre le formulaire en appelant la méthode `onSubmit()` lorsque le formulaire est valide.
+
+### Les formulaires template-driven (FormsModule)
+
+Les formulaires template-driven, eux, sont entièrement gérés par le template. 
 
 Par exemple, imaginons un formulaire qui permet de créer un utilisateur :
 
-```html
-<form #form="ngForm" (ngSubmit)="onSubmit()">
-  <div>
-    <label for="name">Nom</label>
-    <input type="text" id="name" name="name" ngModel required />
-  </div>
-  <div>
-    <label for="email">Email</label>
-    <input type="email" id="email" name="email" ngModel required email />
-  </div>
-  <button type="submit">Envoyer</button>
-</form>
+```ts
+import { Component } from '@angular/core';
+import { NgForm, FormsModule } from '@angular/forms';
+
+@Component({
+  standalone: true,
+  template: `
+    <form (ngSubmit)="onSubmit(form)" #form="ngForm">
+      <div>
+        <label for="name">Nom</label>
+        <input type="text" id="name" name="name" ngModel required />
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" ngModel required email />
+      </div>
+      <button type="submit">Envoyer</button>
+    </form>
+  `,
+  imports: [FormsModule]
+})
+export class UserFormComponent {
+
+  onSubmit(form: NgForm) {
+    if (form.valid) {
+      // Envoi du formulaire
+    }
+  }
+}
 ```
+
+Tout comme pour les formulaires réactifs, il faut importer `FormsModule` pour avoir accès aux directives `ngForm`, `ngModel` et `ngSubmit`.
+Mais tout le reste est très différent.
+
+Ici, l'intelligence du formulaire est entièrement pilotée par le template, c'est à dire que les champs sont reliés au formulaire grâce à la directive `ngModel` et le formulaire est lié à une variable locale (`#form`) avec la directive `ngForm` que nous passons en paramètre de `onSubmit`. Egalement, les validateurs sont passés en attributs des champs.
+
+### ReactiveFormsModule vs FormsModule
+
+C'est un grand débat ! Généralement lorsque vous commencez à utiliser Angular, vous utilisez les formulaires template-driven car ils sont plus simples à mettre en place. Mais plus tard, on vous recommande d'utiliser les formulaires réactifs car ils sont plus puissants et plus flexibles.
+
+Et un jour vous tombez sur des articles ou vidéos de [Ward Bell](https://www.youtube.com/watch?v=L7rGogdfe2Q&t=3s&ab_channel=ng-conf), [Tim Deschryver](https://timdeschryver.dev/blog/a-practical-guide-to-angular-template-driven-forms) ou encore [Brecht Billiet](https://blog.simplified.courses/template-driven-forms-with-form-arrays/) qui prêchent pour l'utilisation des templates driven forms. Et là, vous ne savez plus quoi faire !
+
+Ce que je recommande, c'est déjà d'expérimenter les deux façons de faire pour bien ressentir le feeling d'utilisation de chacun.
+
+Ma préférence personnelle va légèrement pour les templates driven forms, surtout en combinaison avec les [Signal](/cest-quoi/signal). On obtient sensiblement le même résultat qu'avec les reactive forms mais avec moins de code et plus de simplicité.
+
+Il est à parier que lorsque l'API des formulaires seront revisitées par l'équipe d'Angular (car cela arrivera), la solution sera plus proche de la solution des templates driven forms que des reactive forms.
