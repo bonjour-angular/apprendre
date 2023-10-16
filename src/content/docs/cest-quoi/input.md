@@ -5,7 +5,6 @@ sidebar:
   label: Input
 ---
 
-
 `@Input()` sert à passer une donnée d'un composant parent vers son composant enfant.
 
 Imaginons que nous avons un composant qui affiche une liste de produits sur notre site ecommerce :
