@@ -5,10 +5,17 @@ sidebar:
   label: Http Client
 ---
 
-C'est ce qui permet de faire des requêtes Http en GET, POST, DELETE, PUT etc. C'est donc l'outil d'Angular qui permet d'utiliser les endpoints que les devs' backend ont mis en place pour vous.
+Le `HttpClient` permet de faire des requêtes Http en GET, POST, DELETE, PUT etc. C'est donc l'outil d'Angular qui permet d'utiliser les endpoints que les devs' backend ont mis en place pour vous.
 
-Pour pouvoir utiliser le `HttpClient`, vous devez importer `HttpClientModule` dans votre `AppModule`. 
-Si vous utilisez les standalone components (et donc vous n'avez pas de `AppModule`), vous devez importer `provideHttpClient()` dans le `bootstrapApplication()` du `main.ts`.
+Pour pouvoir utiliser le `HttpClient`, vous devez ajouter `provideHttpClient()` dans le tableau de providers de `appConfig`. 
+
+```typescript
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(),
+  ],
+};
+```
 
 Ensuite vous pourrez faire vos requêtes http !
 
@@ -24,7 +31,7 @@ export class TodosService {
   }
 
   getTodoByID(todoID: number): Observable<Todo> {
-    return this.http.get(`api/todos/${todoID});
+    return this.http.get(`api/todos/${todoID}`);
   }
 
   addTodo(todo: Todo): void {
@@ -33,12 +40,14 @@ export class TodosService {
   }
 
   deleteTodo(todoID: number): Observable<Todo> {
-    return this.http.delete(`api/todos/${todoID});
+    return this.http.delete(`api/todos/${todoID}`);
   }
 }
 ```
 
-Maintenant, vous pouvez utiliser ce service dans votre composant ! Les différentes méthodes du `HttpClient` renvoient des `Observable`, il faut donc `subscribe()` pour que cela fonctionne. Il est tout de même important de noter que par défaut les call http se `complete` par défaut lorsqu'ils sont `subscribe()` donc dans l'absolu il n'est pas nécessaire de `unsubscribe()`, mais afin d'éviter des potentiels effets de bords indésirables il est de bon ton de le faire quand même. 
+Maintenant, vous pouvez utiliser ce service dans votre composant !
+
+Les différentes méthodes du `HttpClient` renvoient des `Observable`, il faut donc `subscribe()` pour que cela fonctionne. Il est tout de même important de noter que par défaut les call http se `complete` lorsqu'ils sont `subscribe()` donc dans l'absolu il n'est pas nécessaire de `unsubscribe()`, mais afin d'éviter des potentiels effets de bords indésirables il est de bon ton de le faire quand même.
 
 ```typescript
 @Component({
@@ -53,11 +62,13 @@ Maintenant, vous pouvez utiliser ce service dans votre composant ! Les différen
 })
 export class TodosComponent {
   private readonly todosService = inject(TodosService);
+  destroyRef = inject(DestroyRef);
+
 
   todos$ = this.todosService.getAllTodos();
 
   delete(todoID: number) {
-    this.todosService.deleteTodo(todoID).subscribe()
+    this.todosService.deleteTodo(todoID).pipe(takeUntilDestroyed(this.destroyRef)).subscribe()
   }
   
 }
