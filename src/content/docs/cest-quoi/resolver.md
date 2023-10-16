@@ -5,68 +5,80 @@ sidebar:
   label: Resolver
 ---
 
-Dans Angular, un **resolver** est une interface qui permet de précharger des données avant d'activer une route. C'est particulièrement utile lorsque vous voulez vous assurer que votre application a toutes les données nécessaires avant de rendre une vue ou d'initialiser un composant.
+Dans Angular, un **resolver** est une fonction qui permet de précharger des données avant d'activer une route. C'est particulièrement utile lorsque vous voulez vous assurer que votre application ait toutes les données nécessaires avant que l'utilisateur accède à une page.
 
-L'avantage principal d'utiliser un resolver est que vous pouvez gérer le chargement et les erreurs de données à un seul endroit, plutôt que dans chaque composant.
+### Créer un resolver
 
-## Comment utiliser un resolver?
-
-### 1. Créer un resolver
-
-Tout d'abord, créez un service qui implémente l'interface `Resolve`.
+Tout d'abord, vous devez créer une fonction qui implémente l'interface `Resolve`.
 
 ```typescript
-import { Injectable } from '@angular/core';
-import { Resolve } from '@angular/router';
 import { Observable } from 'rxjs';
+import { type Pokemon, PokemonService } from '@features/pokemon';
+import { inject } from '@angular/core';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class DataResolver implements Resolve<Data> {
+export const pokemonResolver: ResolveFn<any> = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+  pokemonService = inject(PokemonService)
+): Observable<Pokemon> => {
+  const pokemonId = Number(route.paramMap.get('pokemonId'));
+  return pokemonService.getPokemonById(pokemonId);
+};
 
-  constructor(private dataService: DataService) {}
-
-  resolve(): Observable<Data> {
-    return this.dataService.fetchData();
-  }
-}
 ```
 
-### 2. Ajouter le resolver à votre configuration de route
+### Ajouter le resolver à votre configuration de route
 Dans votre module de routage ou votre configuration de route, ajoutez le resolver au chemin concerné.
 
 ```ts
 const routes: Routes = [
   {
-    path: 'data',
-    component: DataComponent,
+   {
+    path: ':pokemonId',
+    component: PokemonRoute,
     resolve: {
-      data: DataResolver
-    }
+      pokemon: pokemonResolver,
+    },
   }
 ];
 
 ```
 
-### 3. Accéder aux données résolues dans votre composant
+### Accéder aux données résolues dans votre composant
 
-Les données résolues sont disponibles dans l'objet ActivatedRoute dans votre composant.
+Les données résolues sont disponibles dans votre composant de deux façons.
+
+#### ActivatedRoute
+
+Grâce à `ActivatedRoute`, vous pouvez accéder à la résolue de manière synchrone ou asynchrone.
 
 ```ts
-constructor(private route: ActivatedRoute) {}
+@Component({...})
+export class PokemonRoute {
+  route = inject(ActivatedRoute);
 
-ngOnInit() {
-  const resolvedData: Data = this.route.snapshot.data['data'];
-  // Utilisez vos données ici
+  pokemon = this.route.snapshot.data['pokemon'];
+  pokemon$ = this.route.data.pipe(map(data => data['pokemon'])); // Observable
 }
-
 ```
 
-## Quand utiliser un resolver?
-Les resolveurs sont utiles lorsque vous avez besoin de :
+#### @Input()
 
-Précharger des données avant de naviguer vers une route.
-Gérer les erreurs de chargement de données de manière centralisée.
-Éviter de montrer une vue partiellement chargée ou un écran de chargement à l'utilisateur.
-Cependant, les resolveurs peuvent rendre la navigation entre les routes plus lente, car la route n'est activée qu'après le chargement complet des données. Utilisez-les judicieusement!
+Vous pouvez également utiliser la propriété `@Input()` pour accéder à la donnée résolue dans votre composant.
+
+```ts
+@Component({...})
+export class PokemonRoute {
+  @Input() pokemon: Pokemon;
+}
+```
+
+Pour que cela fonctionne, vous devez activer cette fonctionnalité dans `appConfig` :
+
+```ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(appRoutes, withComponentInputBinding()),
+  ],
+};
+```

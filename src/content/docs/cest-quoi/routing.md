@@ -5,15 +5,54 @@ sidebar:
   label: Routing
 ---
 
-C'est ce qui permet de relier une url au template (le HTML et CSS) d'un composant. En gros vous faites votre composant, puis dans le router vous indiquez que lorsque l'utilisateur ira sur le path `dashboard` alors Angular devra afficher le composant `dashboard`.
-Le Router nous permet également de "lazy loader"  les composants, c'est à dire les charger uniquement lorsque l'utilisateur arrive sur le path (histoire de gagner en performance).
-On peut y ajouter d'autres fonctionnalités comme les `Guards` par exemple (voir section juste en dessous)
-
-Un exemple 
+C'est ce qui permet de relier une url à un composant.
 
 ```typescript
-export const routes: Route[] = [
-   { path: '', component: LoginComponent },
-   { path: 'dashboard', loadComponent: () => import('./routes/dashboard/dashboard.component.ts')},
+@Component({
+  standalone: true,
+  template: `ProductsListRoute`,
+})
+export default class ProductsListRoute {}
+```
+Maintenant que notre route est créee, on peut l'ajouter à notre router.
+
+```typescript
+export const appRoutes: Route[] = [
+  { 
+    path: 'products-list',
+    component: ProductsListRoute
+  },
+]
+```
+
+Vous pouvez également lazy loader une route en utilisant `loadComponent` au lieu de `component` :
+
+```typescript
+export const appRoutes: Route[] = [
+  {
+    path: 'products-list',
+    loadComponent: () => import('./products-list/products-list.route')
+  },
+]
+```
+
+Ainsi, le composant ne sera chargé que lorsque l'utilisateur accèdera à la route pour de meilleures performances.
+
+### Sous routes
+
+Vous pouvez imbriquer des routes en utilisant la propriété `children` :
+
+```typescript
+export const appRoutes: Route[] = [
+  {
+    path: 'products-list',
+    component: ProductsListRoute,
+    children: [
+      {
+        path: 'product/:id',
+        component: ProductRoute,
+      },
+    ],
+  },
 ]
 ```

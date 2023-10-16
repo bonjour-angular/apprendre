@@ -3,7 +3,9 @@ title: Service
 description: C'est quoi un Service Angular ?
 ---
 
-Ce sont des `class` décorées par `@Injectable()`. Par convention leur noms se terminent par `Service`, par exemple `ProductsService`. On va le plus souvent utiliser ces services dans nos composants en les injectant. Mais ils peuvent être injectés dans d'autres services, des resolvers, des guards, etc.
+Ce sont des `class` décorées par `@Injectable()`. Elles permettent de tirer partie de la Dependency Injection qui est centrale dans Angular.
+
+On va le plus souvent utiliser ces services dans nos composants en les injectant. Mais ils peuvent être injectés dans d'autres services, des resolvers, des guards, etc.
 
 ```ts
 @Injectable({ providedIn: 'root' })
@@ -29,10 +31,20 @@ export class ProductsService {
 
 ```
 
-On utilise pour plusieurs raisons :
-- Mettre notre logique business
-- Nos call http 
-- Le state et les méthodes qui le modifie
-- Des données qui peuvent être réutilisées à divers endroitstate associé. On y expose donc des méthodes qui vont être utilisées généralement dans un composant.
+Puis dans un composant :
 
-Exemple :
+```ts
+@Component({
+  template: `
+    <ul>
+      <li *ngFor="let product of products()">
+        {{product.name}}
+      </li>
+    </ul>
+  `,
+})
+export class ProductsListComponent {
+  #service = inject(ProductsService);
+  products = this.#service.products;
+}
+```
