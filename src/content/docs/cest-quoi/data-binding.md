@@ -5,36 +5,85 @@ sidebar:
   label: Data binding
 ---
 
-Le Data binding est un mécanisme qui permet de lier des données entre elles. Dans Angular, il existe 4 types de Data binding :
+Le data binding permet de lire et/ou synchroniser les propriétés et méthodes de vos composants directement dans leurs templates.
 
-## Interpolation
+Il existe 4 types de data binding dans Angular.
 
-L'interpolation permet d'afficher une valeur dans le template. Pour cela, on utilise la syntaxe `{{ }}` :
+### Interpolation
 
-```html
-<p>Mon nom est {{ name }}</p>
+L'interpolation permet d'afficher une valeur dans le template. Pour cela, on utilise la syntaxe `{{ }}`.
+
+```ts
+@Component({
+  template: `
+    <p>Mon nom est {{ name }}</p>
+    <p>{{ copyright }}</p>
+  `
+})
+export class AppComponent {
+  name = 'Emeline';
+  copyright = `Bonjour Angular, ${new Date().getFullYear()}`
+}
 ```
 
-## Property binding
+### Property binding
 
-Le property binding permet de lier une propriété d'un élément HTML à une valeur dans le composant. Pour cela, on utilise la syntaxe `[ ]` :
+Le property binding permet de lier une propriété d'un élément HTML à une valeur dans le composant. Pour cela, on utilise la syntaxe `[ ]`.
 
-```html
-<button [disabled]="isDisabled">Mon bouton</button>
+```ts
+@Component({
+  template: `
+    <button [disabled]="isDisabled">Mon bouton</button>
+    <img [src]="image" />
+  `
+})
+export class AppComponent {
+  isDisabled = true;
+  image = 'https://angular.io/assets/images/logos/angular/angular.png';
+}
 ```
 
-## Event binding
+### Event binding
 
-L'event binding permet de lier un événement d'un élément HTML à une méthode dans le composant. Pour cela, on utilise la syntaxe `( )` :
+L'event binding permet de lier un événement d'un élément HTML à une méthode dans le composant. Pour cela, on utilise la syntaxe `( )`.
+Il existe beaucoup d'événements comme `click`, `change`, `input`, `keyup`, `keydown`, `mouseover`, `mouseout`, `focus`, `blur`, etc.
 
-```html
-<button (click)="onClick()">Mon bouton</button>
+```ts
+@Component({
+  template: `
+    <button (click)="alert('Bonjour Angular!')">Alert</button>
+  `
+})
+export class AppComponent {
+  alert(message: string) {
+    window.alert(message);
+  }
+}
 ```
 
-## Two-way binding
-
-Le two-way binding permet de lier une propriété d'un élément HTML à une valeur dans le composant, et de lier un événement de cet élément à une méthode dans le composant. Pour cela, on utilise la syntaxe `[( )]` :
+Certains évènements exposent des propriétés comme `$event` qui contient des informations sur l'événement.
 
 ```html
-<input [(ngModel)]="name" />
+<input type="text" (input)="onInput($event)" /> <!-- $event contient la valeur de l'input -->
+<button>Click me!</button (click)="onClick($event)" /> // <!-- $event contient l'objet MouseEvent -->
 ```
+
+A noter que vous pouvez créer des évènements personnalisés pour vos composants avec [`@Output()`](/cest-quoi/output).
+
+### Two-way binding
+
+Le two-way binding est une fonctionnalité qui crée une connexion bidirectionnelle entre un élément HTML et un composant. Cela signifie que toute modification apportée à l'élément est reflétée dans le composant, et vice-versa. Pour réaliser cette liaison, on utilise la syntaxe `[( )]`.
+
+```ts
+@Component({
+  template: `
+    <input type="text" [(ngModel)]="name" />
+    <p>Mon nom est {{ name }}</p>
+  `
+})
+export class AppComponent {
+  name = 'Emeline';
+}
+```
+
+Ici, si l'utilisateur écrit dans l'input, cela modifiera la propriété `name` et ce changement sera reflété automatiquement dans `{{ name }}`.
