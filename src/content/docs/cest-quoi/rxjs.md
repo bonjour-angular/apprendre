@@ -5,7 +5,7 @@ sidebar:
   label: RxJS
 ---
 
-::: note
+:::note
 J'ai créé un article complet sur RxJS, vous pouvez le retrouver [ici](/articles/tout-ce-que-je-sais-sur-rxjs).
 :::
 
