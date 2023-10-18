@@ -3,7 +3,7 @@ title: async au lieu de .subscribe()
 description: async au lieu de .subscribe()
 ---
 
-Une bonne pratique à toujours mettre en place : utilisez `obs$ | async` dans vos templates au lieu de `obs$.subscribe(...)` dans votre code typescript.
+Une bonne pratique à toujours mettre en place si vous voulez afficher une donnée dans votre template : utilisez `obs$ | async` au lieu de `obs$.subscribe(...)`.
 
 ```typescript
 // ✅ GOOD
@@ -16,11 +16,11 @@ Une bonne pratique à toujours mettre en place : utilisez `obs$ | async` dans vo
       </li>
     </ul>
   `,
-  imports: [NgFor, AsyncPipe],
+  imports: [CommonModule],
 })
 export default class ProductsComponent {
-  private productsService = inject(productsService);
-  readonly products$ = this.productsService.products$;
+  private readonly productsService = inject(productsService);
+  protected readonly products$ = this.productsService.products$;
 }
 ```
 ```typescript

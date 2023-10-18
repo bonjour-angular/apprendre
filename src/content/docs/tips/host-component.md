@@ -14,7 +14,7 @@ ou encore
 ```html
 ❌ BAD
 // product.component.html
-// je créé une div superflue juste pour ajouter ma class
+// je créé une div superflue juste pour ajouter ma class à l'intérieur de mon composant
 <div class="some-class">
   ...
 </div>
@@ -23,7 +23,7 @@ ou encore
 Le premier exemple n'est pas correct car cette class css n'est censé concerner que mon composant app-product, et là je me retrouve à la déclarer dans le parent, de plus si je dois changer les class, je vais devoir le faire à tous les endroits où j'ai utilisé mon app-product.
 Le deuxième exemple n'est pas correct non plus car je créé une `div` supplémentaire juste pour du css, ce qui est un peu dommage.
 
-Mais il y a bien mieux ! :point_down:
+Mais il y a bien mieux ! 
 
 ```css
 // product.component.css
@@ -35,7 +35,7 @@ Mais il y a bien mieux ! :point_down:
 
 Le pseudo-selecteur `:host` va cibler la balise du composant directement (qu'on appelle le host), en l'occurrence `<app-product></app-product>`, ainsi on peut ajouter du style directement sur nos composants sans avoir à ajouter une `div` en plus ou une class css lors de l'utilisation du composant !
 
-Si on veut ajouter des class css sur le host:
+On peut aussi ajouter des class CSS directement sur le host comme ceci :
 ```typescript
 @Component({
   selector: 'app-product',
@@ -47,4 +47,5 @@ Si on veut ajouter des class css sur le host:
 ```
 
 En utilisant la propriété `host` dans l'objet du decorator `@Component`, on peut lui préciser une liste de class à ajouter sur la balise `app-product`, c'est très utile surtout si on utilise tailwindcss par exemple !
-Donc là si j'utilise mon composant `<app-product> </app-product>`  lors de la compilation ça me donnera `<app-product class="p-4 bg-gray-300 flex"> </app-product>`
+
+Ainsi, si j'utilise mon composant `<app-product />` lors de la compilation j'obtiendrai `<app-product class="p-4 bg-gray-300 flex"></app-product>`.

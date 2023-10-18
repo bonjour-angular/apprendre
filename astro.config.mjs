@@ -20,6 +20,7 @@ export default defineConfig({
           lang: "fr-FR",
         },
       },
+      tableOfContents: false,
       social: {
         github: "https://github.com/withastro/starlight",
       },
@@ -28,6 +29,11 @@ export default defineConfig({
         {
           label: "🚀 Formation Angular",
           autogenerate: { directory: "formations" },
+          collapsed: false,
+        },
+        {
+          label: "🅰️ Angular changelog",
+          autogenerate: { directory: "angular-change-log" },
           collapsed: false,
         },
         {

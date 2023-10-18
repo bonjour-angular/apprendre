@@ -4,8 +4,7 @@ description: Avez-vous besoin de NgRx ?
 ---
 
 :::note
-Cette article existe également sur [Medium](https://medium.com/@kevin.tale/avez-vous-besoin-de-ngrx-3a09a02cea28).
-
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/avez-vous-besoin-de-ngrx-3a09a02cea28). <br />
 S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
 :::
 
@@ -18,7 +17,7 @@ Mais est-ce vrai ?
 Est-ce que les dernières versions d’Angular avec les Signals peuvent rendre NgRx superflue ?
 Est-ce que les dernières versions de NgRx viennent suffisamment réduire la complexité de l’outil pour justifier son utilisation ?
 
-Dans cette article, nous allons voir si vous avez besoin de NgRx mais également si vous avez intérêt à l’utiliser.
+Dans cette article, nous allons voir si vous avez **besoin** de NgRx mais également si vous avez **intérêt** à l’utiliser.
 
 > Note : il existe d’autres solutions tout aussi intéressantes que NgRx (Akita, Elf, NgXs, StateAdapt…) mais ici on va s’intéresser à NgRx car c’est la plus souvent utilisée.
 
@@ -191,7 +190,7 @@ J’en parle plus longuement dans mon article “NgRx en 2023 : les bonnes prati
 
 > Vous vous demandez peut-être ce qu’est cette syntaxe NgRx, notamment createActionGroup et createFeature ? C’est la syntaxe moderne de NgRx ! Et oui, vous ne le saviez peut-être pas mais l’API moderne de NgRx est probablement très différente de ce que vous utilisez au quotidien. Grâce à elle on peut avoir des stores d’un seul fichier ! <br /> J’en parle plus longuement dans mon article [“NgRx en 2023 : les bonnes pratiques”](/articles/les-bonnes-pratiques-de-ngrx-en-2023/).
 
-#### La différence fondamentale entre l’approche de NgRx et l’approche “classique”
+### La différence fondamentale entre l’approche de NgRx et l’approche “classique”
 
 NgRx se repose sur le pattern Flux proposé par Facebook et utilisé maintenant par bons nombres de solutions de State Management. Ce pattern repose sur la gestion d’un store qui contient un state, des actions, des reducers, des effects et des selectors.
 
@@ -199,7 +198,7 @@ Voilà en quelques mots comment ça fonctionne :
 
 - A l’état initial, mon application écoute toutes les actions en même temps
 - Lorsqu’un évènement survient dans un endroit de mon application (le clique sur le bouton “remove todo”, une requête HTTP qui part…) alors on “dispatch” (déclenche) une action qui dit “il vient de se passer cet évènement”.
-- Un ou plusieurs endroits (reducers et/ou effects) réagissent à cette action en modifiant le state ou en dispatchant une nouvelle action
+- **Un ou plusieurs endroits (reducers et/ou effects) réagissent à cette action** en modifiant le state ou en dispatchant une nouvelle action
 - Mon state est mis à jour, je peux l’utiliser dans mes composants et/ou services
 
 C’est exactement ce que je fais dans mon store NgRx plus haut :
@@ -277,9 +276,9 @@ Admettons que mon PO me demande une évolution. Désormais quand les todos sont 
 
 Comment faire évoluer mon code en ce sens ?
 
-#### Sans NgRx
+### Sans NgRx
 
-Est-ce la fonction loadTodos de mon service qui doit porter cette logique ?
+Est-ce la fonction `loadTodos` de mon service qui doit porter cette logique ?
 
 ```ts
 // le composant exécute la fonction dans le constructor
@@ -315,7 +314,7 @@ loadTodos() {
 }
 ```
 
-Mais dans ce cas-là ma separation of concerns est complètement brisée, mon loadTodos fait bien plus que ce qui prétend faire, mon code devient complètement impératif et plus lourd à tester car je dois mock plusieurs services.
+Mais dans ce cas-là ma separation of concerns est complètement brisée, mon `loadTodos` fait bien plus que ce qui prétend faire, mon code devient complètement impératif et plus lourd à tester car je dois mock plusieurs services.
 
 Alors si ce n’est pas le service qui doit porter cette logique, c’est peut-être le composant ?
 
@@ -354,11 +353,11 @@ loadTodos() {
 
 Ce n’est pas spécialement mieux. Le composant à maintenant trop de logique impérative, la separation of concerns est également brisée.
 
-Bref, dans les deux cas on sent venir le spaghetti code et faire des TUs devient complexe. Mais également : on a du replonger dans les features qu’on avait déjà codé pour les modifier.
+Bref, dans les deux cas on sent venir le spaghetti code et faire des TUs devient complexe. Mais également : **on a du replonger dans les features qu’on avait déjà codé pour les modifier.**
 
 Mais avec NgRx ?
 
-#### Avec NgRx
+### Avec NgRx
 
 ```ts
 // le composant ET l'effect restent inchangés !
@@ -390,11 +389,11 @@ export const someStoreFeature = createFeature({
 
 Vous voyez ce que je viens de faire ? Avec NgRx les autres stores de mon application écoutent également les actions des stores qui les intéressent !
 
-Et ça change TOUT !
+Et ça change **TOUT** !
 
-Les paradigmes sont complètements différents, avec l’approche classique, qu’on appelle “Command Pattern”, j’appelle une fonction qui appelle une fonction qui appelle une fonction tandis qu’avec NgRx je dispatch une action qui peut être écoutée par tout le monde et réagir de manière différente selon qui l’écoute !
+Les paradigmes sont complètements différents, avec l’approche classique, qu’on appelle **“Command Pattern”**, j’appelle une fonction qui appelle une fonction qui appelle une fonction tandis qu’avec NgRx je dispatch une action qui peut être écoutée par tout le monde et réagir de manière différente selon qui l’écoute !
 
-C’est une approche impérative versus une approche déclarative et réactive.
+**C’est une approche impérative versus une approche déclarative et réactive.**
 
 - Avec une approche classique, vous donnez des ordres : “charge les todos, puis charge cela, puis fais ceci !” et dans chaque “ceci ou cela” des ordres subséquents peuvent être également donnés.
 - Avec NgRx (Flux Pattern), quand un évènement survient (ex: “le composant vient de se charger”) vous le poussez dans un flux d’actions et ceux qui écoutent dessus peuvent réagir comme bon leur semble.
@@ -438,7 +437,7 @@ En gros, un effect ou un reducer peuvent écouter sur plusieurs actions. Dans un
 
 Et là mon exemple est simple, une simple todos list avec une feature de load et de remove. Imaginez une application avec des dizaines de pages, des centaines de features et des dizaines de personnes qui l’ont maintenu pendant des années. L’effet se multiplierait de plus en plus ! 🤯
 
-Avec NgRx correctement appliqué, on minimise cet impact car chaque partie logique de l’app est isolé. On a pas de relation direct entre les features, on a des évènements et des réactions.
+Avec NgRx **correctement appliqué**, on minimise cet impact car chaque partie logique de l’app est isolé. On a pas de relation direct entre les features, on a des évènements et des réactions.
 
 Nos composants ne servent que la UI, ils vont uniquement dispatch des actions qui décrivent les évènements, par exemple pageInitialized, et des morceaux de codes vont catch cet évènement pour faire des calls HTTP ou autres.
 
@@ -446,11 +445,11 @@ Voyez-vous maintenant la puissance du Flux Pattern sur lequel se base NgRx et po
 
 Et ce n’est pas tout ! L’écosystème NgRx possède beaucoup de fonctionnalités là pour vous aider.
 
-#### L’écosystème NgRx
+### L’écosystème NgRx
 
-NgRx est bien plus qu’une librairie, c’est un écosystème disposant d’une multitude d‘extensions pour vous aider dans vos besoins quotidiens. Par exemple effects est l’une de ces extensions. Mais il en existe d’autres.
+NgRx est bien plus qu’une librairie, c’est un écosystème disposant d’une multitude d‘extensions pour vous aider dans vos besoins quotidiens. Par exemple `effects` est l’une de ces extensions. Mais il en existe d’autres.
 
-##### Router-Store
+#### Router-Store
 
 On y trouve “@ngrx/router-store” qui nous renvoie un tas de selectors très utile :
 
@@ -473,7 +472,7 @@ export const {
 
 C’est très utile pour faire de la composition de selectors ou pour utiliser dans vos effects.
 
-##### Developer Tools
+#### Developer Tools
 
 C’est le gros plus de NgRx/store ! On a accès au state global de notre application dans le Redux Devtools Extension. Ainsi, on peut voir à tout moment chacun de nos states, l’historique des actions dispatchées avec leurs payload et même rejouer ces dernières !
 
@@ -481,7 +480,7 @@ C’est vraiment un must-have et c’est une merveille pour le debugging. 🤩
 
 [Plus d’infos ici.](https://ngrx.io/guide/store-devtools)
 
-##### Component Store
+#### Component Store
 
 Voici une super extension que j’ai beaucoup utilisé.
 Elle vous permet de gérer un store local (pour votre composant) sans les actions, reducers etc mais tout en gardant de bonnes pratiques et performances.
@@ -537,7 +536,7 @@ En revanche il est à noter que :
 - Le Developer Tool ne fonctionne pas avec Component Store
 - Cela reste du Command Pattern
 
-##### D’autres bonnes raisons d’utiliser NgRx
+### D’autres bonnes raisons d’utiliser NgRx
 
 Si vous utilisez correctement NgRx, vous pourrez être certains que même une nouvelle personne qui rejoint l’équipe prendra en mains rapidement votre application.
 
@@ -550,7 +549,7 @@ Sachez également que connaître NgRx aide très largement à l’embauche car b
 Enfin, des travaux sont en cours pour proposer un ngrx/signals. Vous pouvez découvrir [la doc ici](https://github.com/markostanimirovic/ngrx-signal-store-playground#ngrx-signals).
 Cela semble très prometteur, le boilerplate est encore plus réduit que pour component-store ! J’ai l’impression qu’on reste sur du Command Pattern mais j’ai hâte de voir ça. Ce n’est franchement pas impossible qu’à terme cela devienne ma solution par défaut. A voir quand ça sortira ! Je ferai un article dessus of course !
 
-#### Des raisons de ne pas utiliser NgRx
+### Des raisons de ne pas utiliser NgRx
 
 Si votre équipe n’arrive pas à prendre NgRx/store en mains, alors ne l’utilisez pas. Après tout le but est d’être productif, et NgRx/store à un coût non négligeable en terme d’apprentissage.
 
@@ -560,8 +559,8 @@ Ce n’est évidemment pas non plus garanti que votre équipe fasse du travail p
 
 Mais c’est indéniable : NgRx est verbeux et je comprends que ça puisse en rebuter certains. Cependant à mon sens cette verbosité vaut le coup sur le long terme car vous aurez une application parfaitement réactive, déclarative et qui permet une meilleure separation of concerns.
 
-#### Conclusion
+### Conclusion
 
 A la question “avez-vous besoin de NgRx” je réponds : non, vous pouvez faire des applications qualitatives sans.
 
-Mais à la question “avez-vous intérêt à utiliser NgRx”, je réponds : OUI ! Votre application n’en sera que plus qualitative, maintenable et suivra de meilleures pratiques qui se reposent sur la programmation déclaratives et réactives !
+Mais à la question “avez-vous intérêt à utiliser NgRx”, je réponds : **OUI** ! Votre application n’en sera que plus qualitative, maintenable et suivra de meilleures pratiques qui se reposent sur la programmation déclaratives et réactives !

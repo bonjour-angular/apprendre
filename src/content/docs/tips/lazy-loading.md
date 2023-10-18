@@ -5,7 +5,7 @@ description: Lazy loader vos pages
 
 En mettant en place le Lazy Loading, le compilateur d'Angular segmente les différentes routes de votre application en plusieurs modules JS (chunks). Ces modules ne sont chargés par le navigateur que lorsqu'ils sont requis, ce qui est typiquement le cas lorsqu'un utilisateur accède à une page spécifique.
 
-Ainsi, le navigateur ne charge que le module JS associé à cette page et rien d'autre résultant donc à un initial load réduit ! 🚀
+Ainsi, le navigateur ne charge que le module JS associé à cette page pour de meilleures performances ! 
 
 ```ts
 // app.routing.ts

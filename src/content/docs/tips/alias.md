@@ -9,7 +9,7 @@ On a tous vu ce genre d'import dans nos fichiers :
 import { Something } from '../../../../../../something.ts';
 ```
 
-Vous pouvez éviter cela en utilisant les alias dans le `tsconfig.json` via l'attributs `paths` :
+Vous pouvez éviter cela en utilisant les alias dans le `tsconfig.json` via l'attribut `paths` :
 
 ```ts
 // tsconfig.json

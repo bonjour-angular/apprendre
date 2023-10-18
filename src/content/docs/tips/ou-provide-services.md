@@ -3,47 +3,50 @@ title: Où provider les services ?
 description: Où provider les services ?
 ---
 
-Vous connaissiez peut-être déjà la variable `index` qu'on peut utiliser comme ceci :
+La plupart du temps les Services sont des Singletons, c'est à dire qu'il n'en existe qu'une seule instance et que chaque élément qui l'injecte utilise le même état du service.
 
-```typescript
-@Component({
-  template: `
-   <ul>
-      <li *ngFor="let book of bookList; let index = index">
-        <span>{{ index }} :</span>
-        <span>{{ book.name }}</span>
-      </li>
-    </ul>
-  `
-})
-export class AppComponent{}
+Mais vous pouvez les scoper de bien des façons.
+
+#### Vous avez besoin d'un state global
+
+```ts
+@Injectable({ providedIn: 'root' })
+export class AuthService {...}
 ```
 
-Mais saviez vous qu'il en existe bien d'autres ?
+`{providedIn: 'root'}` pour un Service disponible partout au sein de l'app (le fameux singleton).
+Utilisez ça si vous avez besoin du même state à plusieurs endroits. 
 
-```html
+#### Vous avez besoin d'un state différent pour chaque composant
+
+```ts
+@Injectable()
+export class MyFeatureService {...}
+
 @Component({
-  template: `
-   <ul>
-      <li *ngFor="
-            let product of products;
-            let index = index;
-            let isOdd = odd;
-            let isEven = even;
-            let isFirst = first;
-            let isLast = last"
-      >
-        <span>{{ index }}</span>
-        <span>{{ product.name }}</span>
-        <span *ngIf="isOdd">is odd</span>
-        <span *ngIf="isEven">is even</span>
-        <span *ngIf="isFirst">is the first product</span>
-        <span *ngIf="isLast ">is the last product</span>
-      </li>
-    </ul>
-  `
+  providers: [MyFeatureService]
+  template: `...`,
 })
-export class AppComponent{}
+export class MyFeatureComponent {
+  private readonly myFeatureService= inject(MyFeatureService); 
+}
 ```
 
-Cela peut être très pratique pour styliser vos listes de manière particulière par exemple !
+Utilisez la propriété `providers` d'un composant pour une donnée disponible seulement au niveau du composant. C'est ce qu'on appelle du local state.
+
+#### Vous avez besoin d'un state disponible au niveau d'une route et de ses sous-routes
+
+```ts
+export const featureRoutes: Route[] = [
+  {
+     path: '',
+     component: MyFeatureComponent,
+     providers: [MyFeatureService],
+     canActivate: [MyFeatureGuard],
+     children: [...]
+  }
+]
+```
+
+Utilisez la propriété `providers` de la route qui se trouve dans le fichier de routing.
+En faisant cela, je scope le service à cet endroit là, donc si `MyFeatureComponent` ou `MyFeatureGuard` injecte le service et l'utilise alors ils utiliseront le même state.

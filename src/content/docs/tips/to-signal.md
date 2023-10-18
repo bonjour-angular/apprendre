@@ -28,6 +28,6 @@ export class TodosComponent {
 }
 ```
 
-Cette fonction, dispo depuis la version 16, accepte un Observable en argument pour le caster en Signal. Il ne vous reste plus qu'à utiliser votre Signal dans le template par exemple.
+Cette fonction, dispo depuis la version 16, accepte un Observable en argument pour le caster en Signal. Il ne vous reste plus qu'à utiliser votre Signal dans le template par exemple. En plus de cela, l'Observable est automatiquement unsubscribe au destroy du contexte !
 
-Le bonus : l'Observable est automatiquement unsubscribe au destroy du contexte !
+Important : `toSignal()` va directement souscrire à l'Observable même si vous le l'utilisez pas dans le template.

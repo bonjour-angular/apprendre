@@ -1,15 +1,15 @@
 ---
-title: Les bonnes pratiques de NgRx en 2023
-description: Les bonnes pratiques de NgRx en 2023
+title: Les best practices NgRx en 2023
+description: Les best practices NgRx en 2023
 ---
 
 :::note
-Cette article existe également sur [Medium](https://medium.com/@kevin.tale/ngrx-en-2023-les-bonnes-pratiques-a631a366aeaa).
-
-S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/ngrx-en-2023-les-bonnes-pratiques-a631a366aeaa). <br /> S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
 :::
 
-J’utilise NgRx et son écosystème depuis 2018 et la moindre des choses qu’on puisse dire c’est que NgRx a énormément évolué ! Si vous n’avez pas suivi les nouvelles fonctionnalités de ces deux dernières années, cet article est fait pour vous ! En revanche il est tout de quand même recommandé de connaître les bases de NgRx (actions, reducers, selectors) mais je ferai un récap’ de ces notions là tout de même et probablement un article à l’avenir.
+> TLDR : vous voulez directement avoir accès au code ? C’est par ici : https://github.com/KevTale/ngrx-moderne
+
+J’utilise NgRx et son écosystème depuis 2018 et la moindre des choses qu’on puisse dire c’est que NgRx a **énormément** évolué ! Si vous n’avez pas suivi les nouvelles fonctionnalités de ces deux dernières années, cet article est fait pour vous ! En revanche il est tout de quand même recommandé de connaître les bases de NgRx (actions, reducers, selectors) mais je ferai un récap’ de ces notions là tout de même et probablement un article à l’avenir.
 
 ---
 
@@ -22,16 +22,16 @@ J’avoue avoir été longtemps gêné par le grand nombre de fichiers d’un st
 
 Et chacun de ces fichiers apportent son lot de verbosité.
 
-Mais aujourd’hui, en 2023, cela n’a plus rien à voir, notamment grâce à :
+Mais aujourd’hui, en 2023, cela n’a **plus rien** à voir, notamment grâce à :
 
 - `createFeature` arrivé en version 12 en septembre 2021
 - `createActionGroup` arrivé en version 13 en mai 2022
-- La fonction inject de Angular 14 permettant les functional effects ainsi que d’autres patterns
+- La fonction `inject` de Angular 14 permettant les functional effects ainsi que d’autres patterns
 
-Toutes ces fonctionnalités nous permettent de réduire grandement la verbosité de NgRx et d’améliorer la DX de manière générale, et peut-être même avoir un store avec un seul fichier ?!
+Toutes ces fonctionnalités nous permettent de réduire grandement la verbosité de NgRx et d’améliorer la DX de manière générale, et peut-être même avoir **un store avec un seul fichier** ?!
 Voyons tout cela ensemble !
 
-#### Récap’ de NgRx
+### Récap’ de NgRx
 
 Avant de rentrer dans le vif de sujet, faisons un petit récap’ de ce qu’apporte NgRx et des problèmes auxquels l’écosystème répond.
 
@@ -41,17 +41,17 @@ Il faut trouver une façon de faire ça efficacement, avec des patterns testés 
 
 Et c’est là que NgRx entre en jeu !
 
-NgRx est basé sur le modèle Redux et est adapté pour Angular, il offre une structure et une façon de gérer notre état applicatif de façon déterministique, c’est à dire qu’on doit faire “comme ça et pas autrement” !
+NgRx est basé sur le modèle [Redux](https://redux.js.org/) et est adapté pour Angular, il offre une structure et une façon de gérer notre état applicatif de façon déterministique, c’est à dire qu’on doit faire “comme ça et pas autrement” !
 
 Cela peut être vu comme un inconvénient si la structure n’est pas agréable à utiliser mais il y a aussi beaucoup d’avantages : une façon de faire répandue qui facilite le debugging, la facilité à comprendre le code de ses collègues, la facilité à l’embauche etc. Et au-delà de ça, NgRx propose de grandes performances, un écosystème complet avec les effects, le router store, les pipes et directives, le store-devtools, component-store et bien d’autres encore.
 
-Nous, on va s’attarder sur le package principal ngrx/store et on va étudier la façon moderne de l’utiliser.
+Nous, on va s’attarder sur le package principal **ngrx/store** et on va étudier la façon moderne de l’utiliser.
 
 #### NgRx Moderne
 
 Je ne vais pas réinventer la roue et je vais créer une todos app car elles ont tous les uses cases intéressants dont on a besoin pour éprouver un store NgRx.
 
-Admettons donc que dans cette application, on a un composant TodosComponent qui affiche la liste des todos et permet d’en ajouter.
+Admettons donc que dans cette application, on a un composant `TodosComponent` qui affiche la liste des todos et permet d’en ajouter.
 
 ```ts
 @Component({
@@ -81,13 +81,13 @@ export class ProductsComponent {
 }
 ```
 
-Que se cache t-il derrière injectTodosFeature, telle est la question ! En tout cas, on peut voir qu’on a todosqui semble être un Signal puisqu’on l’exécute, et on a également la méthode add qui s’exécute au submit du formulaire, cette méthode semble ajouter une nouvelle todo avant de vider le champ todoName. Enfin, on a un bouton load all todos.
+Que se cache t-il derrière `injectTodosFeature`, telle est la question ! En tout cas, on peut voir qu’on a `todos` qui semble être un `Signal` puisqu’on l’exécute, et on a également la méthode `add` qui s’exécute au `submit` du formulaire, cette méthode semble ajouter une nouvelle todo avant de vider le champ `todoName`. Enfin, on a un bouton `load all todos`.
 
 Bien, essayons ensemble de créer ce store avec ces fonctionnalités dans une toute nouvelle application Angular 16 !
 
-On va commencer par installer NgRx : ng add @ngrx/store.
+On va commencer par installer NgRx : `ng add @ngrx/store`.
 
-Puis on va créer le folder todosqui contiendra notre composant et un seul fichier store.ts :
+Puis on va créer le folder `todos` qui contiendra notre composant et **un seul fichier** `store.t`s :
 
 ```
 src/
@@ -103,7 +103,7 @@ src/
   style.css
 ```
 
-C’est ce seul fichier store.ts qui contiendra notre store. En effet, grâce aux dernières versions de NgRx, l’API a tellement été réduit qu’on peut se permettre de faire du single file !
+C’est ce seul fichier `store.ts` qui contiendra notre store. En effet, grâce aux dernières versions de NgRx, l’API a tellement été réduit qu’on peut se permettre de faire du single file !
 
 ```ts
 // todos/store.ts
@@ -133,7 +133,7 @@ On peut imaginer que dans notre todos list on a ces actions là :
 - Todo supprimée
 - Reset des todos (pour supprimer tout et reprendre à zéro notre liste)
 
-Dans L’ANCIENNE façon de faire, on procédait comme ça pour définir les actions :
+Dans **L’ANCIENNE** façon de faire, on procédait comme ça pour définir les actions :
 
 ```ts
 import { createAction, props } from "@ngrx/store";
@@ -161,11 +161,11 @@ export const removeTodo = createAction(
 export const resetTodos = createAction("[Todos] Reset Todos");
 ```
 
-Chaque action possède sa chaîne de caractères uniques, c’est ce qui va permettre à ceux qui vont écouter sur ces actions de les différencier, ce sont leur identifiants uniques. Les props c’est la donnée que l’action embarque avec elle pour que ceux qui écoutent les actions puissent s’en servir. A noter qu’une action n’a pas forcément besoin de props (exemple avec todosReset).
+Chaque action possède sa chaîne de caractères **uniques**, c’est ce qui va permettre à ceux qui vont écouter sur ces actions de les différencier, ce sont leur identifiants uniques. Les `props` c’est la donnée que l’action embarque avec elle pour que ceux qui écoutent les actions puissent s’en servir. A noter qu’une action n’a pas forcément besoin de `props` (exemple avec `todosReset`).
 
-Pour informations, si vous utilisez store-devtools (ce que je vous conseille, j’y reviendrai plus bas) et bien lorsque vous dispatchez une action c’est bien ces chaînes de caractères que vous verrez dans les logs. Le [Todos] permet d’identifier à quelle feature appartient l’action pour nous les devs lorsqu’on regarde les logs.
+Pour informations, si vous utilisez store-devtools (ce que je vous conseille, j’y reviendrai plus bas) et bien lorsque vous dispatchez une action c’est bien ces chaînes de caractères que vous verrez dans les logs. Le `[Todos]` permet d’identifier à quelle feature appartient l’action pour nous les devs lorsqu’on regarde les logs.
 
-Bon, voici la NOUVELLE façon de faire, attention les yeux :
+Bon, voici la **NOUVELLE** façon de faire, attention les yeux :
 
 ```ts
 export const todosActions = createActionGroup({
@@ -180,9 +180,9 @@ export const todosActions = createActionGroup({
 });
 ```
 
-On a une fonction createActionGroup qui prend un objet en paramètre, cet objet à une clé source qui a pour valeur le nom de la feature (ce nom sera automatiquement entouré de [] dans les logs) et une clé events qui a pour valeur un objet où on va lister nos différentes actions. Dans cet objet, chaque clé correspond à la chaîne de caractères décrivant l’action, et sa valeur décrit le props. Si on n’a pas de props il faut mettre emptyProps().
+On a une fonction `createActionGroup` qui prend un objet en paramètre, cet objet à une clé `source` qui a pour valeur le nom de la feature (ce nom sera automatiquement entouré de [] dans les logs) et une clé events qui a pour valeur un objet où on va lister nos différentes actions. Dans cet objet, chaque clé correspond à la chaîne de caractères décrivant l’action, et sa valeur décrit le props. Si on n’a pas de props il faut mettre `emptyProps()`.
 
-Et ce n’est pas fini ! En fait, createActionGroup renvoie directement les actions ! Sous quelle forme ? Et bien il se base sur les chaînes de caractères des actions pour créer les actions elles-mêmes !
+Et ce n’est pas fini ! En fait, `createActionGroup` renvoie directement les actions ! Sous quelle forme ? Et bien il se base sur les chaînes de caractères des actions pour créer les actions elles-mêmes !
 
 ```ts
 export const { addTodo, completeTodo, editTodo, removeTodo, resetTodos } =
@@ -198,7 +198,7 @@ export const { addTodo, completeTodo, editTodo, removeTodo, resetTodos } =
   });
 ```
 
-Ici, j’ai déstructuré ce que renvoie createActionGroup et comme vous le voyez on a une méthode addTodo , une autre completeTodo etc. Et c’est précisément parce que j’ai appelé mon action Complete Todo que createActionGroup a crée l’action completeTodo, en gros ils mettent l’action en lower camel case.
+Ici, j’ai déstructuré ce que renvoie `createActionGroup` et comme vous le voyez on a une méthode `addTodo`, une autre `completeTodo` etc. Et c’est précisément parce que j’ai appelé mon action `Complete Todo` que `createActionGroup` a crée l’action `completeTodo`, en gros ils mettent l’action en lower camel case.
 
 Vous pouvez aussi directement le faire si vous préférez :
 
@@ -221,7 +221,7 @@ Parlons maintenant de `createFeature`.
 
 Pour faire simple, `createFeature` c’est à la fois notre reducer et nos selectors.
 
-Toujours dans le fichier todos/store.ts et à la suite du code précédent, on ajoute :
+Toujours dans le fichier `todos/store.ts` et à la suite du code précédent, on ajoute :
 
 ```ts
 export const todosFeature = createFeature({
@@ -262,9 +262,9 @@ export const todosFeature = createFeature({
   ),
 ```
 
-createFeature prend un objet avec deux propriétés : name qui est le nom de notre feature et reducer qui est notre reducer classique qu’on utilise comme à l’accoutumé.
+`createFeature` prend un objet avec deux propriétés : `name` qui est le nom de notre feature et `reducer` qui est notre reducer classique qu’on utilise comme à l’accoutumé.
 
-Ce qui est intéressant c’est ce que return createFeature :
+Ce qui est intéressant c’est ce que return `createFeature` :
 
 ```ts
 export const {
@@ -278,7 +278,7 @@ export const {
 })
 ```
 
-Et oui ! createFeature va automatiquement créer des selectors en se basant sur les propriétés de notre state ! Pour rappel, mon state est celui-ci :
+Et oui ! `createFeature` va automatiquement créer des selectors en se basant sur les propriétés de notre state ! Pour rappel, mon state est celui-ci :
 
 ```ts
 export type TodosState {
@@ -286,9 +286,9 @@ export type TodosState {
 }
 ```
 
-Ainsi, createFeature va créer un selector automatiquement pour chacune des propriétés du state sous la forme selectXXX , par exemple si j’avais une propriété loading en plus de todos , ça aurait créé automatiquement selectLoading. Dingue non ?
+Ainsi, createFeature va créer un selector automatiquement pour chacune des propriétés du state sous la forme `selectXXX` , par exemple si j’avais une propriété loading en plus de todos , ça aurait créé automatiquement `selectLoading`. Dingue non ?
 
-Et si on a besoin de selectors en plus, createFeaturea une propriété supplémentaire appelée extraSelectors et comme son nom l’indique celle-ci nous permet de créer d’autres selectors à notre guise :
+Et si on a besoin de selectors en plus, `createFeature` a une propriété supplémentaire appelée `extraSelectors` et comme son nom l’indique celle-ci nous permet de créer d’autres selectors à notre guise :
 
 ```ts
 export const {
@@ -308,13 +308,13 @@ export const {
 })
 ```
 
-extraSelectors prend une fonction en valeur, l’argument de cette fonction est un objet qui contient chacun de nos selectors déjà existant, ici je déstructure selectTodos pour créer deux autres nouveaux selectors : selectHasTodos et selectCompletedTodos ! C’est aussi simple que ça !
+`extraSelectors` prend une fonction en valeur, l’argument de cette fonction est un objet qui contient chacun de nos selectors déjà existant, ici je déstructure selectTodos pour créer deux autres nouveaux selectors : `selectHasTodos` et `selectCompletedTodos` ! C’est aussi simple que ça !
 
 Personnellement j’adore cette nouvelle façon de faire, je trouve ça très agréable à utiliser.
 
-Bon, nous avons nos actions, nos selectors, notre reducer… Il nous reste les effects !
+Bon, nous avons nos actions, nos selectors, notre reducer… Il nous reste **les effects** !
 
-Je vous en parlais en introduction, grâce à la fonction inject() arrivée avec Angular 14, nous avons accès aux functional effects. L’idée est de pouvoir écrire des effects en dehors de class. Avant nous étions obligé d’utiliser un Injectable (donc une class) car on injectait Actions de @ngrx/effects dans son constructor. Mais ce n’est plus le cas maintenant.
+Je vous en parlais en introduction, grâce à la fonction `inject()` arrivée avec Angular 14, nous avons accès aux functional effects. L’idée est de pouvoir écrire des effects en dehors de class. Avant nous étions obligé d’utiliser un Injectable (donc une class) car on injectait Actions de `@ngrx/effects` dans son `constructor`. Mais ce n’est plus le cas maintenant.
 
 Voyons à quoi ça ressemble :
 
@@ -337,7 +337,7 @@ export const loadTodos$ = createEffect(
 );
 ```
 
-Comme vous le voyez, on injecte actions$ grâce à la fonction inject(), de ce fait nous n’avons pas besoin d’inclure nos effects dans des class, d’où l’appellation functional effects ! On doit simplement ajouter `{ functional: true }` pour que ça fonctionne.
+Comme vous le voyez, on injecte `actions$` grâce à la fonction `inject()`, de ce fait nous n’avons pas besoin d’inclure nos effects dans des class, d’où l’appellation functional effects ! On doit simplement ajouter `{ functional: true }` pour que ça fonctionne.
 
 Si on a besoin d’injecter un service dans notre effect, on peut le faire comme ça :
 
@@ -358,7 +358,7 @@ export const loadTodos$ = createEffect(
 );
 ```
 
-A noter que nous ne sommes pas obligés d’injecter dans les arguments de la fonction de l’effect, voilà à quoi ça ressemble en injectant directement dans le body de createEffect:
+A noter que nous ne sommes pas obligés d’injecter dans les arguments de la fonction de l’effect, voilà à quoi ça ressemble en injectant directement dans le body de `createEffect`:
 
 ```ts
 export const loadTodos = createEffect(
@@ -382,7 +382,7 @@ Mais il n’est pas recommandé de le faire pour faciliter le testing.
 
 Aussi, dans les faits on peut faire du full single file et mettre nos effects dans le même fichier, mais ça peut vite monter à 300/400/500 lignes. Personnellement ça ne me dérange pas d’avoir un long fichier si le code est propre. J’ai toujours préféré scroller que cliquer pour changer de fichiers. Mais si ce n’est pas votre cas, n’hésitez pas à faire un autre fichier pour séparer vos effects !
 
-Ok ! Vous vous rappelez que dans le composant que j’ai montré tout en haut, on a un readonly todosFeature = injectTodosFeature(); ? Et bien on va créer ça, et encore une fois c’est grâce à la fonction inject(). A la fin de notre todos/store.ts, on ajoute :
+Ok ! Vous vous rappelez que dans le composant que j’ai montré tout en haut, on a un `readonly todosFeature = injectTodosFeature();` ? Et bien on va créer ça, et encore une fois c’est grâce à la fonction `inject()`. A la fin de notre `todos/store.ts`, on ajoute :
 
 ```ts
 export function injectTodosFeature() {
@@ -402,9 +402,9 @@ export function injectTodosFeature() {
 
 C’est tout simplement une fonction qui va return un objet avec tous les dispatch d’actions et selectors dont on a besoin. Au final c’est comme une façade ! C’est très pratique car ça nous permet d’exposer à l’extérieur uniquement ce que les consommateurs du store auront besoin.
 
-Vous aurez noter que j’utilise le nouveau store.selectSignal(), qui prend en argument en selector et qui renvoie le transforme en Signal. Si vous voulez en savoir plus sur les Signals, j’ai fait un article complet à ce sujet.
+Vous aurez noter que j’utilise le nouveau `store.selectSignal()`, qui prend en argument en selector et qui renvoie le transforme en Signal. Si vous voulez en savoir plus sur les Signals, j’ai fait un article complet à ce sujet.
 
-Et voilà ! Notre store est terminé. Il ne reste plus qu’à le brancher pour que ça fonctionne. Ici, deux solutions, si vous voulez que votre store soit initialisé au bootstrap de l’application, il faudra aller dans votre app.config.ts (ou main.ts ) :
+Et voilà ! Notre store est terminé. Il ne reste plus qu’à le brancher pour que ça fonctionne. Ici, deux solutions, si vous voulez que votre store soit initialisé au bootstrap de l’application, il faudra aller dans votre `app.config.ts` (ou `main.ts` ) :
 
 ```ts
 export const appConfig: ApplicationConfig = {
@@ -441,7 +441,7 @@ Tout est prêt ! Vous pouvez maintenant utiliser votre store dans vos composants
 
 #### Conclusion
 
-Personnellement j’avais pendant longtemps délaissé ngrx/store au profit de ngrx/component-store car je préférais le fait qu’il y ait moins de fichiers et de verbosité de manière générale. Maintenant l’argument ne tient plus vraiment, avec la version moderne de NgRx je préfère largement l’utiliser. Sa rigueur, les patterns qu’il impose et les devtools (absents de component-store) me plaisent et je félicite l’équipe de NgRx d’avoir traité le plus gros soucis de NgRx : la DX. 👏
+Personnellement j’avais pendant longtemps délaissé `ngrx/store` au profit de `ngrx/component-store` car je préférais le fait qu’il y ait moins de fichiers et de verbosité de manière générale. Maintenant l’argument ne tient plus vraiment, avec la version moderne de NgRx je préfère largement l’utiliser. Sa rigueur, les patterns qu’il impose et les devtools (absents de component-store) me plaisent et je félicite l’équipe de NgRx d’avoir traité le plus gros soucis de NgRx : la DX. 👏
 
-Code source : https://github.com/KevTale/ngrx-moderne
-Article sur NgRx 16 : https://dev.to/ngrx/announcing-ngrx-v16-integration-with-angular-signals-functional-effects-standalone-schematics-and-more-5gk6
+- Code source : https://github.com/KevTale/ngrx-moderne
+- Article sur NgRx 16 : https://dev.to/ngrx/announcing-ngrx-v16-integration-with-angular-signals-functional-effects-standalone-schematics-and-more-5gk6

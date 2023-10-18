@@ -7,7 +7,7 @@ Parfois vous aurez envie qu'un même path renvoie sur deux routes (composants) d
 
 Le problème c'est que `canActivate` ne permet pas de faire ça, mais `canMatch` oui !
 
-👉Si le guard passé dans le `canMatch` renvoie `false`, alors le router va skip la route actuelle et essayer les routes suivantes !
+Si le guard passé dans le `canMatch` renvoie `false`, alors le router va skip la route actuelle et essayer les routes suivantes.
 
 ```ts
 
