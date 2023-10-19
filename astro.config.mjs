@@ -22,7 +22,9 @@ export default defineConfig({
       },
       tableOfContents: false,
       social: {
-        github: "https://github.com/withastro/starlight",
+        github: "https://github.com/bonjour-angular",
+        linkedin: "https://www.linkedin.com/in/kevin-tale/",
+        twitter: "https://twitter.com/xKevinTale",
       },
       sidebar: [
         { label: "👋 Par où commencer ?", link: "/par-ou-commencer" },
@@ -52,6 +54,9 @@ export default defineConfig({
           collapsed: false,
         },
       ],
+      components: {
+        MarkdownContent: "./src/components/Content.astro",
+      },
     }),
   ],
 });
