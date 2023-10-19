@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import vercel from "@astrojs/vercel/serverless";
 
 // https://astro.build/config
 export default defineConfig({
@@ -27,30 +28,43 @@ export default defineConfig({
         twitter: "https://twitter.com/xKevinTale",
       },
       sidebar: [
-        { label: "👋 Par où commencer ?", link: "/par-ou-commencer" },
+        {
+          label: "👋 Par où commencer ?",
+          link: "/par-ou-commencer",
+        },
         {
           label: "🚀 Formation Angular",
-          autogenerate: { directory: "formations" },
+          autogenerate: {
+            directory: "formations",
+          },
           collapsed: false,
         },
         {
           label: "🅰️ Angular changelog",
-          autogenerate: { directory: "angular-change-log" },
+          autogenerate: {
+            directory: "angular-change-log",
+          },
           collapsed: false,
         },
         {
           label: "🤔 C'est quoi ?",
-          autogenerate: { directory: "cest-quoi" },
+          autogenerate: {
+            directory: "cest-quoi",
+          },
           collapsed: false,
         },
         {
           label: "📕 Articles",
-          autogenerate: { directory: "articles" },
+          autogenerate: {
+            directory: "articles",
+          },
           collapsed: false,
         },
         {
           label: "😎 Tips",
-          autogenerate: { directory: "tips" },
+          autogenerate: {
+            directory: "tips",
+          },
           collapsed: false,
         },
       ],
@@ -59,4 +73,10 @@ export default defineConfig({
       },
     }),
   ],
+  output: "server",
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true,
+    },
+  }),
 });
