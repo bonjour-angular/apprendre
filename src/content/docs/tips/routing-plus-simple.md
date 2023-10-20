@@ -3,7 +3,7 @@ title: Un routing plus simple
 description: Utilisez 'default' pour avoir un routing plus simple
 ---
 
-Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! :nerd:
+Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! 
 
 Je peux faire ça avec un composant :
 ```typescript

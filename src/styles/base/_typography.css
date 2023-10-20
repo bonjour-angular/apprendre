@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "Cubano";
+  src: url("../../fonts/cubano.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+h1,
+h2 {
+  font-family: "Cubano", serif;
+  font-weight: normal !important;
+}

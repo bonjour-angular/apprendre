@@ -1,41 +1,27 @@
 ---
 title: Rendre obligatoire les @Input()
-description: Utilisez 'default' pour avoir un routing plus simple
+description: Rendre obligatoire les @Input()
 ---
 
-Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! :nerd:
+C'est arrivé en **version 16**, vos `@Input()` peuvent désormais être marqué comme étant `required` !
 
-Je peux faire ça avec un composant :
-```typescript
+```ts
+@Component({
+  selector: 'app-button',
+  standalone: true,
+  template: `<button [class]="theme" >{{text}}</button>`
+})
+export class ButtonComponent {
+  @Input({required: true}) text: string;
+  @Input() theme: Theme = 'primary'
+}
+
 @Component({
   standalone: true,
-  template: `...`
+  import: [ButtonComponent],
+  template: `<app-button text="click me" />`
 })
-export default class DashboardComponent {}
+export class SomeComponent{}
 ```
-Et aussi avec mes routes :
-```typescript
-export default [
-  {
-    path: '',
-    component: AboutComponent
-  }  
-] as Route[];
-```
-Puis j'ai le droit d'import sans utiliser `then()` !
-```typescript
-export const appRoutes: Route[] = [
-   {
-     path: '',
-     component: AppComponent,
-   },
-   {
-     path: 'dashboard',
-     loadComponent: () => import('./dashboard/dashboard.component'),
-   }, 
-   {
-     path: 'about',
-     loadChildren: () => import('./about/about.routes'),
-   }, 
-]
-```
+
+Ici, j'ai créé un `ButtonComponent` ayant une propriété `text` en required . Si j'oublie de le mettre lors de l'utilisation de mon composant, le compilateur lèvera une erreur !

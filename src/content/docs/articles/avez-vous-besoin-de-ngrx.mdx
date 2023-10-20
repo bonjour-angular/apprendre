@@ -1,0 +1,566 @@
+---
+title: Avez-vous besoin de NgRx ?
+description: Avez-vous besoin de NgRx ?
+---
+
+:::note
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/avez-vous-besoin-de-ngrx-3a09a02cea28). <br />
+S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
+:::
+
+> _“On a pas besoin de NgRx dans notre projet, on fait la même chose avec des BehaviorSubject ou des Signals !”_ <br/> _“NgRx est trop verbeux, il y a trop de fichiers !”_ <br/> _“NgRx c’est bien mais uniquement pour les gros projets !”_ <br/>
+
+Ca vous parle ça ? Moi oui. C’est le discours que j’entends depuis 5 ans que j’utilise NgRx. Certains personnes peuvent être réfractaire à l’idée d’utiliser cet outil car il est parfois vu comme une usine à gaz difficile à utiliser pour peu de bénéfice à la fin.
+
+Mais est-ce vrai ?
+
+Est-ce que les dernières versions d’Angular avec les Signals peuvent rendre NgRx superflue ?
+Est-ce que les dernières versions de NgRx viennent suffisamment réduire la complexité de l’outil pour justifier son utilisation ?
+
+Dans cette article, nous allons voir si vous avez **besoin** de NgRx mais également si vous avez **intérêt** à l’utiliser.
+
+> Note : il existe d’autres solutions tout aussi intéressantes que NgRx (Akita, Elf, NgXs, StateAdapt…) mais ici on va s’intéresser à NgRx car c’est la plus souvent utilisée.
+
+> Autre note : même si je fais un récap’ dans l’article, il est recommandé de connaître le principe de NgRx pour pleinement apprécier cette article (actions, reducer, effects, selectors). Je prévois un article et une formation sur le sujet !
+
+---
+
+Je dois bien avouer que quand on voit ça :
+
+```ts
+@Injectable({ providedIn: "root" })
+export class TodosService {
+  readonly #http = inject(HttpClient);
+
+  readonly todos = signal<Todo[]>([]);
+  readonly error = signal<string | null>(null);
+  readonly hasTodos = computed(() => this.todos().length > 0);
+
+  loadTodos() {
+    this.#http
+      .get<Todo[]>("api/todos")
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (todos) => this.todos.set(todos),
+        error: (error) => this.error.set(error.message),
+      });
+  }
+
+  removeTodo(id: number) {
+    this.todos.update((todos) => todos.filter((todo) => todo.id !== id));
+  }
+}
+```
+
+```
+@Component({
+  template: `
+    <p *ngIf="service.error()">
+      Error: {{ service.error() }}
+    </p>
+
+    <ul *ngIf="service.hasTodos()">
+      <li *ngFor="let todo of service.todos()">
+        {{todo.title}}
+        <button (click)="service.removeTodo(todo.id)">remove</button>
+      </li>
+    </ul>
+  `,
+})
+export class TodosComponent {
+  readonly service = inject(TodosService);
+
+  constructor() {
+    this.service.loadTodos();
+  }
+}
+```
+
+On peut se demander pourquoi on s’embêterait à faire ça :
+
+```ts
+export interface State {
+  todos: Todo[];
+  error: string | null;
+}
+
+export const initialState: State = {
+  todos: [],
+  error: null,
+};
+
+// actions
+export const todosActions = createActionGroup({
+  source: "Todos Page",
+  events: {
+    todosPageInitialized: emptyProps(),
+    loadTodosSucceeded: props<{ todos: Todo[] }>(),
+    loadTodosFailed: props<{ error: string }>(),
+    removeTodoRequested: props<{ id: string }>(),
+  },
+});
+
+// reducer et selectors
+export const todosFeature = createFeature({
+  name: "todos",
+  reducer: createReducer(
+    initialState,
+    on(TodoActions.loadTodosSucceeded, (state, { todos }) => ({
+      ...state,
+      todos,
+    })),
+    on(TodoActions.loadTodosFailure, (state, { error }) => ({
+      ...state,
+      error,
+    })),
+    on(TodoActions.removeTodoRequested, (state, { todoId }) => ({
+      ...state,
+      todos: state.todos.filter((todo) => todo.id !== todoId),
+    }))
+  ),
+  extraSelectors: ({ selectTodos }) => ({
+    selectHasTodos: createSelector(selectTodos, (todos) => todos.length > 0),
+  }),
+});
+
+// effects
+export const loadTodos = createEffect(
+  (actions$ = inject(Actions), http = inject(HttpClient)) =>
+    actions$.pipe(
+      ofType(todosActions.todosPageInitialized),
+      switchMap(() =>
+        http.get<Todo[]>("api/todos").pipe(
+          map((todos) => todosActions.loadTodosSucceeded({ todos })),
+          catchError((error) => of(todosActions.loadTodosFailed({ error })))
+        )
+      )
+    ),
+  { functional: true }
+);
+
+// facade
+export function injectTodosStore() {
+  const store = inject(Store);
+
+  return {
+    removeTodoRequested: (id: number) =>
+      store.dispatch(todosActions.removeTodoRequested({ id })),
+    todosPageInitialized: () =>
+      store.dispatch(todosActions.todosPageInitialized()),
+    todos: store.selectSignal(todosFeature.selectTodos),
+    error: store.selectSignal(todosFeature.selectError),
+    hasTodos: store.selectSignal(todosFeature.selectHasTodos),
+  };
+}
+```
+
+```ts
+@Component({
+  template: `
+    <p *ngIf="todosStore.error()">Error: {{ todosStore.error() }}</p>
+
+    <ul *ngIf="todosStore.hasTodos()">
+      <li *ngFor="let todo of todosStore.todos()">
+        {{ todo.title }}
+        <button (click)="todosStore.removeTodoRequested(todo.id)">
+          remove
+        </button>
+      </li>
+    </ul>
+  `,
+})
+export class TodosListComponent {
+  readonly todosStore = injectTodosStore();
+
+  constructor() {
+    this.todosStore.todosPageInitialized();
+  }
+}
+```
+
+La version NgRx est clairement plus verbeuse :
+👉23 lignes de code sans NgRx
+👉54 lignes de code avec NgRx (en comptant l’interface du state et la facade, sinon on est à 36)
+
+Et le tout pour un résultat fonctionnellement identique. Alors pourquoi s’embêter à utiliser NgRx ?
+
+**Réponse : parce que l’approche de NgRx propose des avantages qui rendront vos codebases plus maintenables.**
+
+J’en parle plus longuement dans mon article “NgRx en 2023 : les bonnes pratiques”.
+
+> Vous vous demandez peut-être ce qu’est cette syntaxe NgRx, notamment createActionGroup et createFeature ? C’est la syntaxe moderne de NgRx ! Et oui, vous ne le saviez peut-être pas mais l’API moderne de NgRx est probablement très différente de ce que vous utilisez au quotidien. Grâce à elle on peut avoir des stores d’un seul fichier ! <br /> J’en parle plus longuement dans mon article [“NgRx en 2023 : les bonnes pratiques”](/articles/les-bonnes-pratiques-de-ngrx-en-2023/).
+
+### La différence fondamentale entre l’approche de NgRx et l’approche “classique”
+
+NgRx se repose sur le pattern Flux proposé par Facebook et utilisé maintenant par bons nombres de solutions de State Management. Ce pattern repose sur la gestion d’un store qui contient un state, des actions, des reducers, des effects et des selectors.
+
+Voilà en quelques mots comment ça fonctionne :
+
+- A l’état initial, mon application écoute toutes les actions en même temps
+- Lorsqu’un évènement survient dans un endroit de mon application (le clique sur le bouton “remove todo”, une requête HTTP qui part…) alors on “dispatch” (déclenche) une action qui dit “il vient de se passer cet évènement”.
+- **Un ou plusieurs endroits (reducers et/ou effects) réagissent à cette action** en modifiant le state ou en dispatchant une nouvelle action
+- Mon state est mis à jour, je peux l’utiliser dans mes composants et/ou services
+
+C’est exactement ce que je fais dans mon store NgRx plus haut :
+
+```ts
+// cette action décrit l'évènement qui vient de se passer
+constructor() {
+  this.todosStore.todosPageInitialized();
+}
+
+// l'effect dans todos.store.ts
+export const loadTodos = createEffect(
+  (
+    actions$ = inject(Actions), // 👈 le bus d'actions de mon app
+    http = inject(HttpClient)
+  ) =>
+    actions$.pipe(
+      ofType(todosActions.todosPageInitialized), // 👈 j'écoutel'action qui m'intéresse
+      switchMap(() =>
+        http.get<Todo[]>('api/todos').pipe(
+          // 👇 je dispatch l'action correspondante selon le success ou fail
+          map((todos) => todosActions.loadTodosSucceeded({ todos })),
+          catchError((error) => of(todosActions.loadTodosFailed({ error })))
+        )
+      )
+    ),
+  { functional: true }
+);
+
+// le reducer dans todos.store.ts
+export const todosFeature = createFeature({
+  name: 'todos',
+  reducer: createReducer(
+    initialState,
+    // 👇je modifie mon state ici
+    on(TodoActions.loadTodosSucceeded, (state, { todos }) => ({ ...state, todos })),
+    on(TodoActions.loadTodosFailed, (state, { error }) => ({ ...state, error })),
+  )
+});
+```
+
+Tandis que sur l’approche classique où j’exécute une fonction, on passe par moins d’étapes :
+
+```ts
+// le composant exécute la fonction dans le constructor
+constructor() {
+  this.todosService.loadTodos();
+}
+
+// dans todos.service.ts
+readonly todos = signal<Todo[]>([]);
+readonly error = signal<string | null>(null);
+
+loadTodos() {
+  this.#http
+    .get<Todo[]>('api/todos')
+    .pipe(
+      takeUntilDestroyed()
+    )
+     // 👇je modifie mes signals ici
+    .subscribe({
+       next: (todos) => this.todos.set(todos),
+       error: (error) => this.error.set(error.message),
+     });
+}
+```
+
+En terme de lisibilité une approche classique gagne à plat de couture. Et vous commencez à me connaître si vous me lisez souvent, je suis un amoureux de la simplicité et de la DX agréable.
+
+Mais il y a désavantage clair à l’approche classique : si j’ai besoin de réagir à loadTodos à un autre endroit de mon application alors les ennuis commencent.
+
+Je m’explique.
+
+Admettons que mon PO me demande une évolution. Désormais quand les todos sont chargés je dois déclencher 3 autres requêtes HTTP et/ou changer une donnée d’un autre state de mon app.
+
+Comment faire évoluer mon code en ce sens ?
+
+### Sans NgRx
+
+Est-ce la fonction `loadTodos` de mon service qui doit porter cette logique ?
+
+```ts
+// le composant exécute la fonction dans le constructor
+constructor() {
+  this.todosService.loadTodos();
+}
+
+// dans todos.service.ts
+// j'injecte mes autres services 👇
+readonly #service1 = inject(Service1);
+readonly #service2 = inject(Service2);
+readonly #service3 = inject(Service3);
+
+readonly todos = signal<Todo[]>([]);
+readonly error = signal<string | null>(null);
+
+loadTodos() {
+  this.#http
+    .get<Todo[]>('api/todos')
+    .pipe(
+      takeUntilDestroyed()
+    )
+    .subscribe({
+       next: (todos) => {
+        this.todos.set(todos);
+        // j'appelle le load des autres services
+        this.#service1.load();
+        this.#service2.load();
+        this.#service3.load();
+       },
+       error: (error) => this.error.set(error.message),
+     });
+}
+```
+
+Mais dans ce cas-là ma separation of concerns est complètement brisée, mon `loadTodos` fait bien plus que ce qui prétend faire, mon code devient complètement impératif et plus lourd à tester car je dois mock plusieurs services.
+
+Alors si ce n’est pas le service qui doit porter cette logique, c’est peut-être le composant ?
+
+```ts
+// dans todos.component.ts
+readonly #service1 = inject(Service1);
+readonly #service2 = inject(Service2);
+readonly #service3 = inject(Service3);
+
+constructor() {
+  this.todosService.loadTodos()
+    .subscribe({
+       next: (todos) => {
+        this.#service1.load();
+        this.#service2.load();
+        this.#service3.load();
+       },
+     })
+}
+
+// dans todos.service.ts
+// j'ai du modifier mon ancien code pour qu'il return l'observable
+// et qu'il set les 'signals' dans l'opérateur 'tap'
+loadTodos() {
+  return this.#http
+    .get<Todo[]>('api/todos')
+    .pipe(
+      takeUntilDestroyed(),
+      tap({
+       next: (todos) => this.todos.set(todos),
+       error: (error) => this.error.set(error.message),
+     })
+    )
+}
+```
+
+Ce n’est pas spécialement mieux. Le composant à maintenant trop de logique impérative, la separation of concerns est également brisée.
+
+Bref, dans les deux cas on sent venir le spaghetti code et faire des TUs devient complexe. Mais également : **on a du replonger dans les features qu’on avait déjà codé pour les modifier.**
+
+Mais avec NgRx ?
+
+### Avec NgRx
+
+```ts
+// le composant ET l'effect restent inchangés !
+// AUCUNE modification n'est nécessaire sur l'ancien code !
+
+// Dans mes autres stores j'écoute sur le loadTodosSucceeded que
+// j'avais dispatché au retour API dans todos.store.ts
+export const doSomething = createEffect(
+  (actions$ = inject(Actions)) =>
+    actions$.pipe(
+      // 👇 ici
+      ofType(TodosActions.loadTodosSucceeded),
+      ...
+    )
+  ,
+  { functional: true }
+);
+
+
+export const someStoreFeature = createFeature({
+  name: 'someStore',
+  reducer: createReducer(
+    initialState,
+    // 👇 et là
+    on(TodosActions.loadTodosSucceeded, (state) => ...),
+  )
+});
+```
+
+Vous voyez ce que je viens de faire ? Avec NgRx les autres stores de mon application écoutent également les actions des stores qui les intéressent !
+
+Et ça change **TOUT** !
+
+Les paradigmes sont complètements différents, avec l’approche classique, qu’on appelle **“Command Pattern”**, j’appelle une fonction qui appelle une fonction qui appelle une fonction tandis qu’avec NgRx je dispatch une action qui peut être écoutée par tout le monde et réagir de manière différente selon qui l’écoute !
+
+**C’est une approche impérative versus une approche déclarative et réactive.**
+
+- Avec une approche classique, vous donnez des ordres : “charge les todos, puis charge cela, puis fais ceci !” et dans chaque “ceci ou cela” des ordres subséquents peuvent être également donnés.
+- Avec NgRx (Flux Pattern), quand un évènement survient (ex: “le composant vient de se charger”) vous le poussez dans un flux d’actions et ceux qui écoutent dessus peuvent réagir comme bon leur semble.
+
+En résumé, avec le Flux Pattern, n’importe quel endroit de l’application peut réagir à cet évènement alors que le Command Pattern exige que l’on exécute explicitement les fonctions.
+
+On peut même faire ce genre de choses avec NgRx :
+
+```ts
+export const someEffect = createEffect(
+  (actions$ = inject(Actions)) =>
+    $actions.pipe(
+      ofType(
+        someAction1,
+        someAction2,
+        someAction3,
+       ),
+      ...
+    )
+);
+
+export const someStoreFeature = createFeature({
+  name: 'someStore',
+  reducer: createReducer(
+    initialState,
+    on(
+      someAction1,
+      someAction2,
+      someAction3,
+      (state) => ...
+    ),
+  )
+});
+```
+
+En gros, un effect ou un reducer peuvent écouter sur plusieurs actions. Dans une approche classique le résultat serait beaucoup moins agréable à gérer car on devrait :
+
+- Replonger dans l’ancienne feature pour ajouter l’exécution de fonctions d’autres services
+- Adapter le TU en conséquence
+- Serrer les fesses pour espérer ne pas avoir introduit de régressions
+
+Et là mon exemple est simple, une simple todos list avec une feature de load et de remove. Imaginez une application avec des dizaines de pages, des centaines de features et des dizaines de personnes qui l’ont maintenu pendant des années. L’effet se multiplierait de plus en plus ! 🤯
+
+Avec NgRx **correctement appliqué**, on minimise cet impact car chaque partie logique de l’app est isolé. On a pas de relation direct entre les features, on a des évènements et des réactions.
+
+Nos composants ne servent que la UI, ils vont uniquement dispatch des actions qui décrivent les évènements, par exemple pageInitialized, et des morceaux de codes vont catch cet évènement pour faire des calls HTTP ou autres.
+
+Voyez-vous maintenant la puissance du Flux Pattern sur lequel se base NgRx et pourquoi cela peut rendre vos applications plus maintenable ?
+
+Et ce n’est pas tout ! L’écosystème NgRx possède beaucoup de fonctionnalités là pour vous aider.
+
+### L’écosystème NgRx
+
+NgRx est bien plus qu’une librairie, c’est un écosystème disposant d’une multitude d‘extensions pour vous aider dans vos besoins quotidiens. Par exemple `effects` est l’une de ces extensions. Mais il en existe d’autres.
+
+#### Router-Store
+
+On y trouve “@ngrx/router-store” qui nous renvoie un tas de selectors très utile :
+
+```ts
+import { getRouterSelectors, RouterReducerState } from "@ngrx/router-store";
+
+export const {
+  selectCurrentRoute, // select the current route
+  selectFragment, // select the current route fragment
+  selectQueryParams, // select the current route query params
+  selectQueryParam, // factory function to select a query param
+  selectRouteParams, // select the current route params
+  selectRouteParam, // factory function to select a route param
+  selectRouteData, // select the current route data
+  selectRouteDataParam, // factory function to select a route data param
+  selectUrl, // select the current url
+  selectTitle, // select the title if available
+} = getRouterSelectors();
+```
+
+C’est très utile pour faire de la composition de selectors ou pour utiliser dans vos effects.
+
+#### Developer Tools
+
+C’est le gros plus de NgRx/store ! On a accès au state global de notre application dans le Redux Devtools Extension. Ainsi, on peut voir à tout moment chacun de nos states, l’historique des actions dispatchées avec leurs payload et même rejouer ces dernières !
+
+C’est vraiment un must-have et c’est une merveille pour le debugging. 🤩
+
+[Plus d’infos ici.](https://ngrx.io/guide/store-devtools)
+
+#### Component Store
+
+Voici une super extension que j’ai beaucoup utilisé.
+Elle vous permet de gérer un store local (pour votre composant) sans les actions, reducers etc mais tout en gardant de bonnes pratiques et performances.
+
+On peut voir l’équivalent de notre applications todos sous Component Store :
+
+```ts
+export interface State {
+  todos: Todo[];
+  error: string | null;
+}
+
+export const initialState: State = {
+  todos: [],
+  error: null,
+};
+
+@Injectable()
+export class TodosListStore extends ComponentStore<State> {
+  readonly #todosService = inject(TodosService);
+
+  readonly todos = this.selectSignal(state => state.todos);
+  readonly error = this.selectSignal(state => state.error);
+  readonly hasTodos= this.selectSignal(state => state.todos > 0);
+
+  constructor() {
+    super(initialState);
+  }
+
+  readonly loadTodos= this.effect<void>(
+     (trigger$) => trigger$.pipe(
+      switchMap(() =>
+        this.#todosService.loadTodos().pipe(
+          tapResponse({
+            next: (todos) => this.patchState({ todos },
+            error: (error: HttpErrorResponse) => this.patchState({ error},
+          })
+        )
+      )
+    )
+  );
+
+  removeTodo(id: number) {
+    this.todos.setState(state => ({...state, todos: todos.filter(todo => todo.id !== id)}))
+  }
+}
+```
+
+C’est une bonne alternative si vous voulez une approche simple du State Management. Je vous conseille cette extension plutôt que d’implémenter une solution de State Management faite maison.
+
+En revanche il est à noter que :
+
+- Le Developer Tool ne fonctionne pas avec Component Store
+- Cela reste du Command Pattern
+
+### D’autres bonnes raisons d’utiliser NgRx
+
+Si vous utilisez correctement NgRx, vous pourrez être certains que même une nouvelle personne qui rejoint l’équipe prendra en mains rapidement votre application.
+
+Aussi, NgRx est constamment mis à jour et ils travaillent avec la team Angular pour toujours avancer dans la même direction. C’est pour cela que NgRx est très performants et les features très adaptés au framework Angular.
+
+Vous avez peut-être envie de créer votre propre solution basée sur les principes de Redux [comme certains le font](https://www.youtube.com/watch?v=R4Ff2bPiWh4&ab_channel=JoshuaMorony) et il serait intéressant de le faire car cela vous aidera à comprendre parfaitement les avantages de cette approche. Mais ayez en tête qu’en faisant cela, il y a de fortes chances que vous ne fassiez que recréer la roue (en probablement moins bien). Vous devrez la maintenir, la faire évoluer, la documenter… Bref c’est un boulot à pleins temps ! Et croyez moi, des projets qui utilisent correctement NgRx ça ne court pas les rues, alors leurs propres solutions faites maison… 😬
+
+Sachez également que connaître NgRx aide très largement à l’embauche car beaucoup de projets l’utilisent. Maîtriser cette outil et l’indiquer sur son CV est un gros plus.
+
+Enfin, des travaux sont en cours pour proposer un ngrx/signals. Vous pouvez découvrir [la doc ici](https://github.com/markostanimirovic/ngrx-signal-store-playground#ngrx-signals).
+Cela semble très prometteur, le boilerplate est encore plus réduit que pour component-store ! J’ai l’impression qu’on reste sur du Command Pattern mais j’ai hâte de voir ça. Ce n’est franchement pas impossible qu’à terme cela devienne ma solution par défaut. A voir quand ça sortira ! Je ferai un article dessus of course !
+
+### Des raisons de ne pas utiliser NgRx
+
+Si votre équipe n’arrive pas à prendre NgRx/store en mains, alors ne l’utilisez pas. Après tout le but est d’être productif, et NgRx/store à un coût non négligeable en terme d’apprentissage.
+
+Donc si vous êtes dans un rush, que vous avez des deadline serrées et que le rapport risque/coût n’est pas bon, utilisez plutôt NgRx/component-store voire les Signals en “vanilla”.
+
+Ce n’est évidemment pas non plus garanti que votre équipe fasse du travail propre avec component-store ou les Signals, mais au moins il n’y a pas tout une mécanique à apprendre, c’est déjà ça !
+
+Mais c’est indéniable : NgRx est verbeux et je comprends que ça puisse en rebuter certains. Cependant à mon sens cette verbosité vaut le coup sur le long terme car vous aurez une application parfaitement réactive, déclarative et qui permet une meilleure separation of concerns.
+
+### Conclusion
+
+A la question “avez-vous besoin de NgRx” je réponds : non, vous pouvez faire des applications qualitatives sans.
+
+Mais à la question “avez-vous intérêt à utiliser NgRx”, je réponds : **OUI** ! Votre application n’en sera que plus qualitative, maintenable et suivra de meilleures pratiques qui se reposent sur la programmation déclaratives et réactives !

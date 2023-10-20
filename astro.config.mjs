@@ -1,10 +1,11 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import vercel from "@astrojs/vercel/static";
 
 // https://astro.build/config
 export default defineConfig({
   redirects: {
-    "/": "/commencez-par-ici",
+    "/": "/par-ou-commencer",
   },
   integrations: [
     starlight({
@@ -12,31 +13,70 @@ export default defineConfig({
       logo: {
         src: "./src/assets/logo.webp",
       },
-      customCss: ["./src/styles/main.css"],
+      favicon: "/public/favicon.png",
+      customCss: ["./src/styles/index.css"],
       locales: {
         root: {
           label: "Français",
           lang: "fr-FR",
         },
       },
+      tableOfContents: false,
       social: {
-        github: "https://github.com/withastro/starlight",
+        github: "https://github.com/bonjour-angular",
+        linkedin: "https://www.linkedin.com/in/kevin-tale/",
+        twitter: "https://twitter.com/xKevinTale",
       },
       sidebar: [
-        { label: "👋 Commencez par ici", link: "/commencez-par-ici" },
+        {
+          label: "👋 Par où commencer ?",
+          link: "/par-ou-commencer",
+        },
         {
           label: "🚀 Formation Angular",
-          autogenerate: { directory: "formations" },
+          autogenerate: {
+            directory: "formations",
+          },
+          collapsed: false,
+        },
+        {
+          label: "🅰️ Angular changelog",
+          autogenerate: {
+            directory: "angular-change-log",
+          },
+          collapsed: false,
         },
         {
           label: "🤔 C'est quoi ?",
-          autogenerate: { directory: "cest-quoi" },
+          autogenerate: {
+            directory: "cest-quoi",
+          },
+          collapsed: false,
+        },
+        {
+          label: "📕 Articles",
+          autogenerate: {
+            directory: "articles",
+          },
+          collapsed: false,
         },
         {
           label: "😎 Tips",
-          autogenerate: { directory: "tips" },
+          autogenerate: {
+            directory: "tips",
+          },
+          collapsed: false,
         },
       ],
+      components: {
+        MarkdownContent: "./src/components/Content.astro",
+      },
     }),
   ],
+  output: "static",
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true,
+    },
+  }),
 });

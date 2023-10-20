@@ -1,0 +1,16 @@
+---
+import type { Props } from "@astrojs/starlight/props";
+import Default from "@astrojs/starlight/components/MarkdownContent.astro";
+import CommentSection from "./CommentSection.astro";
+
+const { slug } = Astro.props;
+
+const withCommentSection =
+  slug.startsWith("articles") ||
+  slug.startsWith("tips") ||
+  slug.startsWith("cest-quoi");
+---
+
+<Default {...Astro.props}><slot /></Default>
+
+{withCommentSection && <CommentSection />}

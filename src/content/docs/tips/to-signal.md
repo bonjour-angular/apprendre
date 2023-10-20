@@ -1,41 +1,33 @@
 ---
 title: Migrer vers les Signal avec toSignal()
-description: Utilisez 'default' pour avoir un routing plus simple
+description: Migrer vers les Signal avec toSignal()
+sidebar:
+    badge:
+        text: New
+        variant: caution
 ---
 
-Réduisez le *boilerplate* de votre routing Angular en utilisant le mot clé `default` afin de signifier à typescript quel objet vous exportez par défaut. Ainsi, plus besoin de préciser `then(m => m.MyModule)`, c'est toujours ça de pris ! :nerd:
+Il est SUPER facile d'adopter les Signals dès aujourd'hui dans vos applications Angular 16+.
 
-Je peux faire ça avec un composant :
-```typescript
+Il suffit d'utiliser toSignal().
+
+```ts
 @Component({
   standalone: true,
-  template: `...`
+  template: `
+    <ul>
+      <li *ngFor="let todo of todos()">
+        {{todo.title}}
+      </li>
+    <ul>
+  `,
 })
-export default class DashboardComponent {}
+export class TodosComponent {
+  http = inject(HttpClient);
+  todos = toSignal(this.http.get('https://jsonplaceholder.typicode.com/todos'))
+}
 ```
-Et aussi avec mes routes :
-```typescript
-export default [
-  {
-    path: '',
-    component: AboutComponent
-  }  
-] as Route[];
-```
-Puis j'ai le droit d'import sans utiliser `then()` !
-```typescript
-export const appRoutes: Route[] = [
-   {
-     path: '',
-     component: AppComponent,
-   },
-   {
-     path: 'dashboard',
-     loadComponent: () => import('./dashboard/dashboard.component'),
-   }, 
-   {
-     path: 'about',
-     loadChildren: () => import('./about/about.routes'),
-   }, 
-]
-```
+
+Cette fonction, dispo depuis la version 16, accepte un Observable en argument pour le caster en Signal. Il ne vous reste plus qu'à utiliser votre Signal dans le template par exemple. En plus de cela, l'Observable est automatiquement unsubscribe au destroy du contexte !
+
+Important : `toSignal()` va directement souscrire à l'Observable même si vous le l'utilisez pas dans le template.

@@ -1,0 +1,270 @@
+---
+title: Tout comprendre sur les Signals
+description: Tout comprendre sur les Signals dans Angular
+---
+
+:::note
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/tout-comprendre-sur-les-signals-dans-angular-7bbbbf00b975/). <br/>S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
+:::
+
+### Des applications Angular plus performantes avec les Signals… et avec une meilleure DX ?
+
+Les Signals sont arrivés avec Angular 16 ce qui a mis la communauté Angular en effervescence ! Mais le sujet est complexe, c’est pourquoi j’ai écrit cette article qui compile toutes les infos importantes et qui explique **le pourquoi du comment des Signals** et comment ils vous aideront dans vos applications Angular.
+
+---
+
+Ok alors revenons aux bases. Les Signals c’est un sujet complexe, donc on va essayer d’y aller étape par étape.
+
+### Le problème
+
+Considérons ce composant :
+
+```typescript
+@Component({
+  template: `
+    <p>{{ celsius }}</p>
+    // 25
+    <p>{{ fahrenheit }}</p>
+    // 77
+  `,
+})
+export class SomeComponent {
+  celsius = 25;
+  fahrenheit = this.celsius * 1.8 + 32;
+}
+```
+
+Ca marche nickel, j’affiche 25 degrés Celsius et 77 degrés Fahrenheit.
+Mais que se passe t-il si j’ajoute un bouton pour doubler `celsius` ?
+
+```typescript
+@Component({
+  template: `
+    // je clique sur ce bouton 👇
+    <button (click)="doubleCelsius()">Doubler le degré celsius</button>
+    <p>{{ celsius }}</p>
+    // ça me renvoie bien 50
+    <p>{{ fahrenheit }}</p>
+    // ça me renvoie toujours 77 😱
+  `,
+})
+export class SomeComponent {
+  celsius = 25;
+  fahrenheit = this.celsius * 1.8 + 32;
+
+  doubleCelsius() {
+    this.celsius = this.celsius * 2;
+  }
+}
+```
+
+Patatra, ça marche plus ! `fahrenheit` me renvoie toujours 77. Il n’a pas été recalculé. Pourquoi ? Et bien cette propriété est initialisée lors de la construction du composant, et seulement à ce moment-là. A aucun moment `fahrenheit` ne se recalcule, cette propriété n’est pas **réactive, ça veut dire qu’elle ne réagit pas (elle ne se recalcule pas) lorsque les valeurs auxquels elle dépend changent.**
+
+Une solution serait de transformer `fahrenheit` en getter.
+
+```typescript
+@Component({
+  template: `
+    <button (click)="doubleCelsius()">Doubler le degré celsius</button>
+    <p>{{ celsius }}</p>
+    <p>{{ fahrenheit }}</p>
+  `,
+})
+export class AppComponent {
+  celsius = 25;
+
+  get fahrenheit() {
+    return this.celsius * 1.8 + 32;
+  }
+
+  doubleCelsius() {
+    this.celsius = this.celsius * 2;
+  }
+}
+```
+
+Et là, ça fonctionne impec’ ! `fahrenheit` est bien recalculée quand je clique sur le bouton. Mais comment ça marche et pourquoi ce n’est pas une bonne solution ? En fait, le getter va se recalculer dès que la change detection d’Angular s’exécute et pas seulement quand `celsius` change, ce qui est mauvais pour la performance.
+
+Bon… Quelle est la bonne solution alors ? RxJS to the rescue!
+Voyons comment on peut facilement solutionner notre problème avec RxJS.
+
+```typescript
+@Component({
+  template: `
+    <button (click)="doubleCelsius()">Doubler le degré celsius</button>
+    <p>{{ celsius$ | async }}</p>
+    <p>{{ fahrenheit$ | async }}</p>
+  `,
+})
+export class AppComponent {
+  celsius$$ = new BehaviorSubject(25);
+  celsius$ = this.celsius$$.asObservable();
+  fahrenheit$ = this.celsius$.pipe(map((celsius) => celsius * 1.8 + 32));
+
+  doubleCelsius() {
+    this.celsius$$.next(this.celsius$$.value * 2);
+  }
+}
+```
+
+Super ! Ca fonctionne très bien, l’observable `fahrenheit$` dépend de `celsius$` , lorsque ce dernier est modifié (grâce à `this.celsiusSubject$$.next()`) alors `fahrenheit$` est également modifié. C’est ce que l’on appelle `la programmation réactive car `fahrenheit$` “écoute” ses dépendances et réagit lorsque la valeur de celles-ci changent`.
+
+**Quel est le problème alors ?**
+
+On en a deux :
+
+1. La performance. Sans entrer trop dans les détails car ça pourrait être un article à part entière, la détection de changement dans Angular fonctionne très bien **mais n’est pas optimale**. Pour gérer sa change detection Angular se repose sur zone.js, une librairie tierce qui écoute tous les évènements du browser (clique, mouvements de souris, setTimeout, setInterval…) et permet de faire des choses en callback dès qu’un évènement se termine. Angular tire partie de cela en lançant sa change detection ce qui met à jour les templates de **tous** les composants actuellement dans le DOM, et pas seulement sur les composants où il y a bel et bien un changement.
+2. La complexité du code. Comme vous le voyez dans le code au dessus, on doit apprendre et comprendre RxJS pour construire des applications efficaces. Et rares sont ceux qui maîtrisent cette librairie et ses paradigmes. La team Angular a identifié que beaucoup de devs’ s’éloignent d’Angular à cause de cette complexité.
+
+Ils ont donc décider de simplifier les choses.
+
+### Introducing les Signals
+
+Le principe des Signals n’est pas une invention d’Angular, en fait c’est un paradigme connu depuis des dizaines d’années. Et même dans l’écosystème frontend on a déjà des implémentations des Signals (SolidJS, Vue…). Il était donc temps que Angular s’y mette aussi !
+
+Voici l’équivalent de la fonctionnalité d’avant mais avec les Signals.
+
+```typescript
+@Component({
+  template: `
+    <button (click)="doubleCelsius()">Doubler le degré celsius</button>
+    <p>{{ celsius() }}</p>
+    <p>{{ fahrenheit() }}</p>
+  `,
+})
+export class AppComponent {
+  celsius = signal(25);
+  fahrenheit = computed(() => this.celsius() * 1.8 + 32);
+
+  doubleCelsius() {
+    this.celsius.update((celsius) => celsius * 2);
+    this.celsius.set(this.celsius() * 2); // on peut aussi faire comme ça, ça revient au même
+  }
+}
+```
+
+Décortiquons ce qu’il se passe dans ce composant :
+
+- On créé notre premier signal avec une valeur par défaut : `celsius = signal(25)` . Son type est `WritableSignal<number>` ce qui signifie que vous pouvez modifier ce signal (il n’est pas readonly).
+- Pour lire la donnée actuelle de mon signal, je l’exécute, je le fais à deux endroits : dans le template et dans la fonction `computed`. C’est donc comme cela qu’on accède à la valeur courante d’un signal : `celsius()`. Et c’est bien ça tout le principe d’un Signal : c’est un “wrapper” par dessus une valeur. Quand on exécute la fonction qui wrap la valeur elle nous renvoie la dernière valeur connue du signal.
+- La fonction `computed` nous permet d’obtenir la réactivité que l’on désire tant ! `computed` prend une fonction en argument, dans cette fonction on utilise le signal `celsius` et on renvoie le calcul qui permet de transformer des dégrés Celsius en Fahrenheit. La magie opère dès lors que celsius change, en fait dès que cela va arriver alors fahrenheit va se recalculer, et tout ça grâce à computed ! Cette fonctione traque ses dépendances (les Signals qui sont exécuter à l’intérieur) et se réexécute dès que l’une d’entre elles changent et est différent de la valeur précédente. A noter que le type de retour d’un computed est `Signal<T>`, et est readonly !
+- Pour modifier la valeur d’un signal, on peut utiliser `.update()` qui prend en argument une fonction dont l’argument est la valeur actuelle du signal.
+- Alternativement, on peut utiliser `.set()` pour modifier la valeur d’un signal si on a pas besoin de sa valeur courante.
+
+Je ne l’ai pas mis dans mon exemple mais nous avons également la fonction `effect`. `effect` s’exécute dès qu’un signal utilisé en son sein change de valeur :
+
+```typescript
+@Component({
+  template: `
+    <button (click)="doubleCelsius()">Doubler le degré celsius</button>
+    <p>{{ celsius() }}</p>
+    <p>{{ fahrenheit() }}</p>
+  `,
+})
+export class AppComponent {
+  celsius = signal(25);
+  fahrenheit = computed(() => this.celsius() * 1.8 + 32);
+
+  doubleCelsius() {
+    this.celsius.update((celsius) => celsius * 2);
+  }
+
+  log = effect((onCleanUp) => {
+    console.log(`celsius vient de changer, il vaut ${this.celsius()}`);
+
+    onCleanUp(() => {
+      console.log("le composant est détruit");
+    });
+  });
+}
+```
+
+Dès que le signal `celsius` changera, alors l’effect s’exécutera, car je l’utilise dans le `console.log`. Et en plus de cela, les effects ont une cleanup function qui s’exécute au destroy du contexte de là où il a été appelé ! L’utilité de effect est encore sujet à débat, certains les utilisent pour faire leur call HTTP par exemple. Attendons d’avoir un peu de recule pour trouver les meilleures use cases.
+
+#### Le gain en performance grâce aux Signals
+
+Je le disais au début, l’objectif est notamment d’améliorer les performances de vos applications Angular. Avec la version 16 nous sommes à mi-chemin de cet objectif car le framework a pour le moment encore besoin de zone.js pour savoir quand exécuter sa change detection. Mais ça ne sera plus le cas très prochainement car nous pourrons ajouter un attribut signal: trueà nos composants (un peu comme `standalone: true`) pour complètement se passer de zone.js et exécuter la change detection directement au niveau des composants qui en ont besoin !
+
+Ainsi, la change detection sera exécutée uniquement lorsque la valeur d’un signal utilisée dans un template changera et le framework procèdera à la mise à jour du template uniquement au composant affecté par le changement et non plus à l’arbre entier de composants. C’est une énorme différence ! Nous n’aurons même plus besoin de `changeDetection: ChangeDetectionStrategy.OnPush` !
+
+#### Bye bye RxJS alors ?
+
+On a vu que nous n’avions plus besoin de `Subject` ou des `Observable` pour créer nos données et les modifier, alors plus besoin de RxJS, si ?
+
+Et bien… Pas si sûr !
+
+RxJS ce n’est pas que des `Observable` , c’est aussi des operators. `switchMap`, `filter`, `tap`, `debounceTime` … Tous ces operators sont là pour nous faciliter la vie et bon courage pour implémenter un `switchMap` fait maison.
+
+Forte heureusement, la team Angular a pensé à nous ! Ils mettent en avant l’intéropérabilité entre les Signals et RxJS, c’est à dire le fait que les deux “univers” peuvent fonctionner ensemble.
+
+Nous avons donc accès à deux méthodes :
+
+1. `toSignal()` qui prend un observable et renvoie un signal
+2. `toObservable()` qui prend un signal et renvoie un observable
+
+Voyons comment on peut utiliser ça :
+
+```typescript
+@Component({
+  template: `
+    <ul>
+      <li *ngFor="let product of availableProducts">
+        {{ product.title }}
+      </li>
+    </ul>
+  `,
+})
+export class AppComponent {
+  http = inject(HttpClient);
+  // j'utilise httpClient de manière classique pour
+  // faire mon call http et passer mes operators rxjs
+  availableProducts$ = this.http.get('api/products')
+    .pipe(
+      filter(product => product.quantity > 0),
+      map(...),
+      catchError(...)
+    );
+
+  // je convertis mon observable en signal avec toSignal.
+  // A noter que toSignal() subscribe et unsubscribe automatiquement !
+  availableProducts = toSignal(
+    this.availableProducts$,
+    {initialValue: []} // sinon ça émet "undefined" au début
+  );
+}
+```
+
+Ainsi, on peut toujours profiter de la puissance des operators RxJS et des Signals !
+
+Un autre exemple montrant l’utilisation de `toObservable` :
+
+```typescript
+@Component({
+  template: `
+    <input type="number" (input)="changeProductId($event)" />
+    <p>{{ product().title }}</p>
+  `,
+})
+export class AppComponent {
+  http = inject(HttpClient);
+
+  productId = signal(1);
+  product$ = toObservable(this.productId).pipe(
+    switchMap((productId) => this.http.get(`api/products/${productId}`))
+  );
+
+  product = toSignal(this.product$, { initialValue: {} });
+
+  changeProductId(event: Event) {
+    const id = (event.target as HTMLInputElement).value;
+    this.productId.set(Number(id));
+  }
+}
+```
+
+On caste en observable le signal qui contient l’id du produit afin d’écouter dessus et dès qu’il change (via l’input) on fait un `switchMap()` en utilisant l’endpoint avec la valeur de l’id du produit. Enfin notre propriété `product` convertit le résultat en signal.
+
+#### Conclusion
+
+En conclusion, les Signals font partie de la mouvance de la grande renaissance de Angular et vont changer beaucoup de choses. Il faudra attendre que les librairies tierces émergent et imposent les bonnes pratiques, je pense notamment à NgRx. Aussi, la team Angular va certainement passer aux Signals pour ses fonctionnalités genre HttpClient ou les formulaires (rien n’est sûr mais ça va sûrement arriver tôt ou tard).
+Donc il est important de se mettre à jour sur les Signals et vous pouvez compter sur moi pour vous apporter toutes les infos nécessaires !
