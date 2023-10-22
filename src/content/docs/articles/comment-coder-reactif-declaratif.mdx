@@ -1,0 +1,256 @@
+---
+title: Comment coder de manière réactive et déclarative
+description: Comment coder de manière réactive et déclarative
+---
+
+:::note
+Cette article existe également sur [Medium](https://medium.com/@kevin.tale/comment-coder-de-mani%C3%A8re-r%C3%A9active-et-d%C3%A9clarative-en-angular-a698b95da9f6). <br />
+S'il vous a plu, n'hésitez pas à me laisser un (ou plusieurs) petit clap 😉
+:::
+
+Un conseil que l'on voit souvent dans les bonnes pratiques Angular, c'est de coder de manière réactive et déclarative.
+
+Pour être honnête, je crois bien que c'est l'une des compétences les plus importantes à avoir lorsque l'on fait du développement d'applications Angular.
+
+Quand on programme de manière réactive et déclarative, notre code devient plus prévisible, plus explicite et moins verbeux. De ce fait, on arrive à produire plus rapidement et de manière plus agréable.
+
+C'est un véritable état d'esprit à avoir, et quand on l'a, on n'a plus envie de faire marche arrière tant le gain est évident.
+
+C'est bon, je vous ai assez vendu le truc comme ça ? Très bien. Alors répondons à cette phrase : que veut dire "programmer de manière réactive et déclarative" ?
+
+---
+
+Démarrons avec ce composant.
+
+```typescript
+@Component({
+  template: `
+    <p>{{ celsius }}</p>
+    <p>{{ fahrenheit }}</p>
+    <button (click)="doubleCelsius()">Doubler celsius</button>
+  `,
+})
+export class SomeComponent {
+  celsius = 25;
+  fahrenheit = this.celsius * 1.8 + 32;
+
+  doubleCelsius() {
+    this.celsius = this.celsius * 2;
+  }
+}
+```
+
+A l'état initial, j'affiche des degrés Celsius et son équivalent en Fahrenheit. Au clique sur le bouton, je double le degré Celsius.
+
+L'objectif est simple, j'aimerais que fahrenheit soit toujours égal à son équivalent en Celsius même si ce dernier change.
+
+Maintenant, je clique sur `Doubler Celsius`.
+
+Question : est-ce que `fahrenheit` a changé ?
+Réponse : non !
+
+Et après tout c'est logique, `fahrenheit` n'est interprété que lors de l'initialisation du composant. Donc à sa création il se base sur `celsius` mais plus tard même si `celsius` change, ce n'est pas le cas de `fahrenheit`.
+
+On dit que `fahrenheit` n'est pas **réactif**, il ne réagit pas lorsque ses dépendances changent.
+
+Une façon de régler le problème pourrait être ceci.
+
+```typescript
+...
+doubleCelsius() {
+    this.celsius = this.celsius * 2;
+    this.fahrenheit = this.celsius * 1.8 + 32;
+}
+...
+```
+
+Mais vous voyez vite les problèmes :
+
+- La Single Responsibility Principle est brisée car la fonction fait plus que ce qu'elle prétend faire
+- Il est facile d'oublier de mettre à jour une donnée qui dépendrait de `celsius`
+- Il est compliqué de suivre "l'état de vie" de `fahrenheit` car il est modifié à divers endroit de mon fichier
+
+Ce dernier point est important car c'est ce qui crée rapidement l'effet "spaghetti code", c'est à dire un code où il faut parcourir plusieurs méthodes voire fichiers pour déterminer le flux de fonctionnement principal.
+
+Là mon cas est simple mais imaginez dans une vraie applications avec des centaines de composants, services etc…
+
+### La programmation réactive et déclarative à la rescousse !
+
+La programmation réactive fera en sorte que `fahrenheit` réagisse automatiquement lorsque `celsius` changera. Et la programmation déclarative rendra ce code facilement compréhensible.
+
+Et les Signal sont parfait pour ça !
+
+```typescript
+@Component({
+  template: `
+    <p>{{ celsius() }}</p>
+    <p>{{ fahrenheit() }}</p>
+    <button (click)="doubleCelsius()">Doubler celsius</button>
+  `,
+})
+export class SomeComponent {
+  celsius = signal(25);
+  fahrenheit = computed(() => this.celsius() * 1.8 + 32);
+
+  doubleCelsius() {
+    this.celsius.update((celsius) => celsius * 2);
+  }
+}
+```
+
+Ici, `celsius` est un Signal, je le modifie avec la méthode `.update()`. `fahrenheit` est définie grâce à `computed`.
+
+Dès qu'un Signal est utilisé dans `computed()` celui-ci est enregistré en tant que dépendance. Ainsi, lorsque l'une de ses dépendances est modifiées alors `computed()` se recalcule, permettant ainsi de réagir aux changements automatiquement ! C'est donc très pratique pour créer des valeurs dérivées et est une représentation parfaite d'un code réactif.
+
+Mais en quoi est-ce un code déclaratif ?
+
+Et bien, je disais plus haut que le code déclaratif est plus facile à comprendre. C'est le cas ici. Dans la déclaration de `fahrenheit` j'y décris tout son cycle de vie, je n'ai pas à écrire étape par étape ce qu'il advient de cette propriété. Je me repose sur des abstractions, en l'occurrence `computed`.
+
+On retrouve également ça avec les méthodes des tableaux en JS.
+
+```typescript
+Code Impératif
+let numbers = [1, 2, 3, 4, 5];
+let oddNumbers = [];
+
+for (let i = 0; i < numbers.length; i++) {
+    if (numbers[i] % 2 !== 0) {
+        oddNumbers.push(numbers[i]);
+    }
+}
+
+// Code Déclaratif
+let numbers = [1, 2, 3, 4, 5];
+let oddNumbers = numbers.filter(num => num % 2 !== 0);
+```
+
+La plupart du temps la programmation déclarative consiste à se reposer sur des fonctions déjà existantes pour obtenir ce que l'on veut. C'est le cas ici avec `filter` ou avec les Signals et `computed`.
+
+Un autre exemple avec les Signal.
+
+```typescript
+@Component({
+  template: `
+    ...
+    <input
+      type="text"
+      placeholder="Filter products"
+      (input)="setFilter($event)"
+    />
+    ...
+  `
+})
+export class ProductsComponent {
+  #products = signal([...]);
+  #filter = signal('');
+
+  filteredProducts = computed(() =>
+    this.#products().filter(product => product.includes(this.#filter()))
+  );
+  isFilteredProductsEmpty = computed(
+    () => this.filteredProducts().length === 0
+  );
+
+  setFilter(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.#filter.set(input.value);
+  }
+}
+```
+
+Comme vous le voyez, il est très facile de faire des "cascades" de réactivité.
+
+Voyez sa version impérative (à ne pas reproduire chez soi !)
+
+```typescript
+@Component({
+  template: `
+    ...
+    <input
+      type="text"
+      placeholder="Filter products"
+      (input)="setFilter($event)"
+    />
+    ...
+  `
+})
+export class ProductsComponent {
+  private products: string[] = [...];
+  private filter: string = '';
+
+  public filteredProducts: string[] = this.products;
+  public isFilteredProductsEmpty: boolean = this.products.length === 0;
+
+  setFilter(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.filter = input.value;
+    this.updateFilteredProducts();
+    this.checkIfFilteredProductsEmpty();
+  }
+
+  private updateFilteredProducts(): void {
+    this.filteredProducts = this.products.filter(product => product.includes(this.filter));
+  }
+
+  private checkIfFilteredProductsEmpty(): void {
+    this.isFilteredProductsEmpty = this.filteredProducts.length === 0;
+  }
+}
+```
+
+### Un exemple avec RxJS
+
+```typescript
+@Component({...})
+export class ProductComponent {
+  route = inject(ActivatedRoute);
+  productService = inject(ProductService);
+
+  product$ = this.route.params.pipe(
+    switchMap(params => this.productService.getProductById(params['id']))
+  );
+}
+```
+
+Ce code est à la fois réactif et déclaratif car il me suffit de lire la propriété `product$` pour comprendre ce qui le constitue, je ne la réassigne jamais. Et il est réactif car il se repose sur RxJS et plus particulièrement l'Observable `params` qui vient de `ActivatedRoute`.
+
+Je peux même renforcer le fait que je veux du code déclaratif en mettant la propriété en readonly :
+
+```typescript
+readonly product$ = this.route.params.pipe(
+  switchMap(params => this.productService.getProductById(params['id']))
+);
+```
+
+Ainsi, je suis certain qu'il n'y a pas d'effet de bord possible, mon code est plus robuste et prévisible.
+
+### Un code réactif mais pas déclaratif
+
+Même si les deux notions sont très souvent associées, vous pouvez faire du code réactif mais pas déclaratif.
+
+```typescript
+@Component({...})
+export class ProductComponent {
+  route = inject(ActivatedRoute);
+  productService = inject(ProductService);
+
+  product!: Product;
+
+  constructor() {
+    this.route.params.pipe(
+      switchMap(params => this.productService.getProductById(params['id']))
+    ).subscribe(product => this.product = product);
+  }
+}
+```
+
+Ce code se retrouve beaucoup dans les applications Angular. `product` est réassignée dans le `subscribe()`, je suis donc typiquement dans du code impératif où je décris étape par étape ce qu'il advient de ma propriété. Cela rend le code plus verbeux et ça créé un `subscribe` manuel là où un `| async` ou `toSignal` serait plus judicieux.
+
+### Conclusion
+
+Si je devais résumer ces deux termes, je dirais :
+
+- La programmation réactive consiste à créer du code qui réagit lorsque des données changent ou lorsqu'un évènement survient.
+- La programmation déclarative consiste à décrire ce que l'on souhaite obtenir sans préciser les étapes détaillées pour y parvenir.
+
+Pour être efficaces, vos applications doivent être construites sur une logique réactive et déclarative, vous devez penser "évènements" et "flux de données", cela évitera le spaghetti code et donc retardera le legacy !
