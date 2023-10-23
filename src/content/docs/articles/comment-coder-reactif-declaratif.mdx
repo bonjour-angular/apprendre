@@ -158,7 +158,7 @@ export class ProductsComponent {
 }
 ```
 
-Comme vous le voyez, il est très facile de faire des "cascades" de réactivité.
+Comme vous le voyez, il est très facile de faire des "cascades" de réactivité. C’est le cas ici car `setFilter` fait uniquement ce qu’il prétend faire : changer le filtre. Puis tout les changements suivants surviennent en cascade.
 
 Voyez sa version impérative (à ne pas reproduire chez soi !)
 
@@ -198,6 +198,8 @@ export class ProductsComponent {
 }
 ```
 
+La version déclarative et réactive offre donc un avantage très clair en terme de lecture et de prédictibilité. Il est moins aisé d’introduire des effets de bords ou d’oublier de mettre à jour certaines données.
+
 ### Un exemple avec RxJS
 
 ```typescript
@@ -212,7 +214,7 @@ export class ProductComponent {
 }
 ```
 
-Ce code est à la fois réactif et déclaratif car il me suffit de lire la propriété `product$` pour comprendre ce qui le constitue, je ne la réassigne jamais. Et il est réactif car il se repose sur RxJS et plus particulièrement l'Observable `params` qui vient de `ActivatedRoute`.
+Ce code est à la fois réactif et déclaratif car il me suffit de lire la propriété `product$` pour comprendre ce qui le constitue, je ne la réassigne jamais. Et il est réactif car il se repose sur RxJS et plus particulièrement l'Observable `params` qui vient de `ActivatedRoute`. Dès que l’id va changer alors `params` va émettre une nouvelle donnée dans son flux et donc cela va rentrer dans mon `switchMap` qui va faire un nouveau call HTTP.
 
 Je peux même renforcer le fait que je veux du code déclaratif en mettant la propriété en readonly :
 
