@@ -13,7 +13,7 @@ export default defineConfig({
       logo: {
         src: "./src/assets/logo.webp",
       },
-      favicon: "/public/favicon.png",
+      favicon: "favicon.png",
       customCss: ["./src/styles/index.css"],
       locales: {
         root: {
