@@ -1,10 +1,6 @@
 ---
 title: Migrer vers les Signal avec toSignal()
 description: Migrer vers les Signal avec toSignal()
-sidebar:
-    badge:
-        text: New
-        variant: caution
 ---
 
 Il est SUPER facile d'adopter les Signals dès aujourd'hui dans vos applications Angular 16+.

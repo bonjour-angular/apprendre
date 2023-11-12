@@ -1,10 +1,6 @@
 ---
 title: Signal
-description: A reference page in my new Starlight docs site.
-sidebar:
-    badge:
-        text: New
-        variant: caution
+description: C'est quoi les Signals dans Angular ?
 ---
 
 :::note
@@ -15,7 +11,7 @@ Toutes les fonctionnalités des Signal ne sont pas encore disponibles. A terme, 
 Si vous voulez tout savoir sur les Signal, j'ai créé un article complet à ce sujet. [Pour en savoir plus](https://medium.com/@kevin.tale/tout-comprendre-sur-les-signals-dans-angular-7bbbbf00b975)
 :::
 
-Les Signals sont arrivés avec Angular 16.
+Les Signals sont arrivés avec Angular 16 et stables en version 17.
 
 Ils ont pour vocation d'adresser deux problématiques :
 1. RxJS qui n'est pas toujours simple à utiliser
