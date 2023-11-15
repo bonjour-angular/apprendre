@@ -41,7 +41,7 @@ Ici, cela n'a pas de sens d'avoir le bouton de connexion et le bouton "mon compt
 </header>
 ```
 
-Grâce à `@for`, j'affiche le bouton "Se connecter" si l'utilisateur n'est pas connecté et le bouton "Mon compte" si l'utilisateur est connecté.
+Grâce à `@if`, j'affiche le bouton "Se connecter" si l'utilisateur n'est pas connecté et le bouton "Mon compte" si l'utilisateur est connecté.
 
 ### Boucler avec `@for`
 
