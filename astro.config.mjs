@@ -32,20 +32,13 @@ export default defineConfig({
           label: "👋 Par où commencer ?",
           link: "/par-ou-commencer",
         },
-        {
-          label: "🚀 Formation Angular",
-          autogenerate: {
-            directory: "formations",
-          },
-          collapsed: false,
-        },
-        {
-          label: "🅰️ Angular changelog",
-          autogenerate: {
-            directory: "angular-change-log",
-          },
-          collapsed: false,
-        },
+        // {
+        //   label: "🚀 Formation Angular",
+        //   autogenerate: {
+        //     directory: "formations",
+        //   },
+        //   collapsed: false,
+        // },
         {
           label: "🤔 C'est quoi ?",
           autogenerate: {
@@ -64,6 +57,13 @@ export default defineConfig({
           label: "😎 Tips",
           autogenerate: {
             directory: "tips",
+          },
+          collapsed: false,
+        },
+        {
+          label: "🅰️ Angular changelog",
+          autogenerate: {
+            directory: "angular-change-log",
           },
           collapsed: false,
         },
