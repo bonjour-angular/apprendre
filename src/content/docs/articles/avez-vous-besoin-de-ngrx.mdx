@@ -202,19 +202,24 @@ Voilà en quelques mots comment ça fonctionne :
 C’est exactement ce que je fais dans mon store NgRx plus haut :
 
 ```ts
-// cette action décrit l'évènement qui vient de se passer
+// todos-list.component.ts
+
 constructor() {
+  // cette action décrit l'évènement qui vient de se passer
   this.todosStore.todosPageInitialized();
 }
+```
 
-// l'effect dans todos.store.ts
+```ts
+// todos.store.ts
+
 export const loadTodos = createEffect(
   (
     actions$ = inject(Actions), // 👈 le bus d'actions de mon app
     http = inject(HttpClient)
   ) =>
     actions$.pipe(
-      ofType(todosActions.todosPageInitialized), // 👈 j'écoutel'action qui m'intéresse
+      ofType(todosActions.todosPageInitialized), // 👈 j'écoute l'action qui m'intéresse
       switchMap(() =>
         http.get<Todo[]>('api/todos').pipe(
           // 👇 je dispatch l'action correspondante selon le success ou fail
@@ -226,7 +231,6 @@ export const loadTodos = createEffect(
   { functional: true }
 );
 
-// le reducer dans todos.store.ts
 export const todosFeature = createFeature({
   name: 'todos',
   reducer: createReducer(
