@@ -52,7 +52,7 @@ export class TodosService {
 }
 ```
 
-```
+```ts
 @Component({
   template: `
     <p *ngIf="service.error()">
@@ -179,16 +179,14 @@ export class TodosListComponent {
 ```
 
 La version NgRx est clairement plus verbeuse :
-👉23 lignes de code sans NgRx
-👉54 lignes de code avec NgRx (en comptant l’interface du state et la facade, sinon on est à 36)
+- 23 lignes de code sans NgRx
+- 54 lignes de code avec NgRx (en comptant l’interface du state et la facade, sinon on est à 36)
 
 Et le tout pour un résultat fonctionnellement identique. Alors pourquoi s’embêter à utiliser NgRx ?
 
 **Réponse : parce que l’approche de NgRx propose des avantages qui rendront vos codebases plus maintenables.**
 
-J’en parle plus longuement dans mon article “NgRx en 2023 : les bonnes pratiques”.
-
-> Vous vous demandez peut-être ce qu’est cette syntaxe NgRx, notamment createActionGroup et createFeature ? C’est la syntaxe moderne de NgRx ! Et oui, vous ne le saviez peut-être pas mais l’API moderne de NgRx est probablement très différente de ce que vous utilisez au quotidien. Grâce à elle on peut avoir des stores d’un seul fichier ! <br /> J’en parle plus longuement dans mon article [“NgRx en 2023 : les bonnes pratiques”](/articles/les-bonnes-pratiques-de-ngrx-en-2023/).
+> Vous vous demandez peut-être ce qu’est cette syntaxe NgRx, notamment `createActionGroup` et `createFeature` ? C’est la syntaxe moderne de NgRx ! <br /> J’en parle plus longuement dans mon article [“NgRx en 2023 : les bonnes pratiques”](/articles/les-bonnes-pratiques-de-ngrx-en-2023/).
 
 ### La différence fondamentale entre l’approche de NgRx et l’approche “classique”
 
