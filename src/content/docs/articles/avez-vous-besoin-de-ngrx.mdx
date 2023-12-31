@@ -245,32 +245,38 @@ export const todosFeature = createFeature({
 Tandis que sur l’approche classique où j’exécute une fonction, on passe par moins d’étapes :
 
 ```ts
-// le composant exécute la fonction dans le constructor
+// todos-list.component.ts
+
 constructor() {
+  // le composant exécute la fonction dans le constructor
   this.todosService.loadTodos();
 }
+```
 
-// dans todos.service.ts
-readonly todos = signal<Todo[]>([]);
-readonly error = signal<string | null>(null);
+```ts
+@Injectable({ providedIn: 'root' })
+export class TodosService {
+  readonly todos = signal<Todo[]>([]);
+  readonly error = signal<string | null>(null);
 
-loadTodos() {
-  this.#http
-    .get<Todo[]>('api/todos')
-    .pipe(
-      takeUntilDestroyed()
-    )
-     // 👇je modifie mes signals ici
-    .subscribe({
-       next: (todos) => this.todos.set(todos),
-       error: (error) => this.error.set(error.message),
-     });
+  loadTodos() {
+    this.#http
+      .get<Todo[]>('api/todos')
+      .pipe(
+        takeUntilDestroyed()
+      )
+      // 👇je modifie mes signals ici
+      .subscribe({
+        next: (todos) => this.todos.set(todos),
+        error: (error) => this.error.set(error.message),
+      });
+  }
 }
 ```
 
 En terme de lisibilité une approche classique gagne à plat de couture. Et vous commencez à me connaître si vous me lisez souvent, je suis un amoureux de la simplicité et de la DX agréable.
 
-Mais il y a désavantage clair à l’approche classique : si j’ai besoin de réagir à loadTodos à un autre endroit de mon application alors les ennuis commencent.
+Mais il y a désavantage clair à l’approche classique : si j’ai besoin de réagir à `loadTodos` à un autre endroit de mon application alors les ennuis commencent.
 
 Je m’explique.
 
@@ -283,36 +289,33 @@ Comment faire évoluer mon code en ce sens ?
 Est-ce la fonction `loadTodos` de mon service qui doit porter cette logique ?
 
 ```ts
-// le composant exécute la fonction dans le constructor
-constructor() {
-  this.todosService.loadTodos();
-}
+@Injectable({ providedIn: 'root' })
+export class TodosService {
+  // j'injecte mes autres services 👇
+  readonly #service1 = inject(Service1);
+  readonly #service2 = inject(Service2);
+  readonly #service3 = inject(Service3);
 
-// dans todos.service.ts
-// j'injecte mes autres services 👇
-readonly #service1 = inject(Service1);
-readonly #service2 = inject(Service2);
-readonly #service3 = inject(Service3);
+  readonly todos = signal<Todo[]>([]);
+  readonly error = signal<string | null>(null);
 
-readonly todos = signal<Todo[]>([]);
-readonly error = signal<string | null>(null);
-
-loadTodos() {
-  this.#http
-    .get<Todo[]>('api/todos')
-    .pipe(
-      takeUntilDestroyed()
-    )
-    .subscribe({
-       next: (todos) => {
-        this.todos.set(todos);
-        // j'appelle le load des autres services
-        this.#service1.load();
-        this.#service2.load();
-        this.#service3.load();
-       },
-       error: (error) => this.error.set(error.message),
-     });
+  loadTodos() {
+    this.#http
+      .get<Todo[]>('api/todos')
+      .pipe(
+        takeUntilDestroyed()
+      )
+      .subscribe({
+        next: (todos) => {
+          this.todos.set(todos);
+          // j'appelle le load des autres services
+          this.#service1.load();
+          this.#service2.load();
+          this.#service3.load();
+        },
+        error: (error) => this.error.set(error.message),
+      });
+  }
 }
 ```
 
@@ -321,35 +324,49 @@ Mais dans ce cas-là ma separation of concerns est complètement brisée, mon `l
 Alors si ce n’est pas le service qui doit porter cette logique, c’est peut-être le composant ?
 
 ```ts
-// dans todos.component.ts
-readonly #service1 = inject(Service1);
-readonly #service2 = inject(Service2);
-readonly #service3 = inject(Service3);
+@Component({...})
+export class TodosComponent {
 
-constructor() {
-  this.todosService.loadTodos()
-    .subscribe({
-       next: (todos) => {
-        this.#service1.load();
-        this.#service2.load();
-        this.#service3.load();
-       },
-     })
+  readonly #todosService = inject(TodosService);
+  readonly #service1 = inject(Service1);
+  readonly #service2 = inject(Service2);
+  readonly #service3 = inject(Service3);
+
+  readonly todos = this.#todosService.todos;
+
+  constructor() {
+    this.todosService.loadTodos()
+      .subscribe({
+        next: (todos) => {
+          this.#service1.load();
+          this.#service2.load();
+          this.#service3.load();
+        },
+      })
+  }
 }
+```
 
-// dans todos.service.ts
-// j'ai du modifier mon ancien code pour qu'il return l'observable
-// et qu'il set les 'signals' dans l'opérateur 'tap'
-loadTodos() {
-  return this.#http
-    .get<Todo[]>('api/todos')
-    .pipe(
-      takeUntilDestroyed(),
-      tap({
-       next: (todos) => this.todos.set(todos),
-       error: (error) => this.error.set(error.message),
-     })
-    )
+```ts
+@Injectable({ providedIn: 'root' })
+export class TodosService {
+  
+  readonly todos = signal<Todo[]>([]);
+  readonly error = signal<string | null>(null);
+
+  // j'ai du modifier mon ancien code pour qu'il return l'observable
+  // et qu'il set les 'signals' dans l'opérateur 'tap'
+  loadTodos() {
+    return this.#http
+      .get<Todo[]>('api/todos')
+      .pipe(
+        tap({
+          next: (todos) => this.todos.set(todos),
+          error: (error) => this.error.set(error.message),
+        }),
+        takeUntilDestroyed()
+      )
+  }
 }
 ```
 
