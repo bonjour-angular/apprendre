@@ -7,8 +7,8 @@ sidebar:
 
 Dans Angular, il existe deux types de formulaires :
 
--   Les formulaires réactifs
--   Les formulaires template-driven
+- Les formulaires réactifs
+- Les formulaires template-driven
 
 Bien que les deux types de formulaires permettent de faire la même chose, leurs utilisations diffèrent et ont des avantages et des inconvénients.
 
@@ -19,8 +19,8 @@ Le principe des formulaires réactifs est de créer un objet qui représente le 
 Par exemple, imaginons un formulaire qui permet de créer un utilisateur :
 
 ```ts
-import { Component } from '@angular/core';
-import { FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component } from "@angular/core";
+import { FormGroup, Validators, ReactiveFormsModule } from "@angular/forms";
 
 @Component({
   standalone: true,
@@ -37,12 +37,12 @@ import { FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
       <button type="submit">Envoyer</button>
     </form>
   `,
-  imports: [ReactiveFormsModule]
+  imports: [ReactiveFormsModule],
 })
 export class UserFormComponent {
   protected readonly form = new FormGroup({
-    name: new FormControl('', Validators.required),
-    email: new FormControl('', [Validators.required, Validators.email])
+    name: new FormControl("", Validators.required),
+    email: new FormControl("", [Validators.required, Validators.email]),
   });
 
   onSubmit() {
@@ -63,36 +63,54 @@ Maintenant, il ne me reste plus qu'à soumettre le formulaire en appelant la mé
 
 ### Les formulaires template-driven (FormsModule)
 
-Les formulaires template-driven, eux, sont entièrement gérés par le template. 
+Les formulaires template-driven, eux, sont entièrement gérés par le template.
 
 Par exemple, imaginons un formulaire qui permet de créer un utilisateur :
 
 ```ts
-import { Component } from '@angular/core';
-import { NgForm, FormsModule } from '@angular/forms';
+import { Component } from "@angular/core";
+import { NgForm, FormsModule } from "@angular/forms";
 
 @Component({
   standalone: true,
   template: `
-    <form (ngSubmit)="onSubmit(form)" #form="ngForm">
+    <form (ngSubmit)="onSubmit()">
       <div>
         <label for="name">Nom</label>
-        <input type="text" id="name" name="name" ngModel required />
+        <input
+          type="text"
+          id="name"
+          name="name"
+          [(ngModel)]="user.name"
+          required
+        />
       </div>
       <div>
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" ngModel required email />
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="user.email"
+          required
+          email
+        />
       </div>
       <button type="submit">Envoyer</button>
     </form>
   `,
-  imports: [FormsModule]
+  imports: [FormsModule],
 })
 export class UserFormComponent {
+  user = {
+    name: "",
+    email: "",
+  };
 
-  onSubmit(form: NgForm) {
-    if (form.valid) {
+  onSubmit() {
+    if (user.name && user.email) {
       // Envoi du formulaire
+      console.log(this.user);
     }
   }
 }
