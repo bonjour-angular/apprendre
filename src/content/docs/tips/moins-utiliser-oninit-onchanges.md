@@ -1,10 +1,6 @@
 ---
 title: Moins utiliser OnInit et OnChanges
 description: Moins utiliser OnInit et OnChanges
-sidebar:
-  badge:
-    text: New
-    variant: caution
 ---
 
 Je n'utilise presque jamais ngOnInit ou ngOnChanges dans mes composants Angular.

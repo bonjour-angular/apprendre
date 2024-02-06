@@ -47,6 +47,13 @@ export default defineConfig({
           collapsed: false,
         },
         {
+          label: "🎥 Videos",
+          autogenerate: {
+            directory: "videos",
+          },
+          collapsed: false,
+        },
+        {
           label: "📕 Articles",
           autogenerate: {
             directory: "articles",

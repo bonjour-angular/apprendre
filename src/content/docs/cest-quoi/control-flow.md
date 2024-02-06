@@ -1,11 +1,6 @@
 ---
 title: C'est quoi le Control Flow ?
 description: C'est quoi le Control Flow dans Angular ?
-sidebar:
-  label: Control Flow
-  badge:
-      text: New
-      variant: caution
 ---
 
 :::note
@@ -34,9 +29,9 @@ Ici, cela n'a pas de sens d'avoir le bouton de connexion et le bouton "mon compt
 <header>
   <h1>Mon site</h1>
   @if (!isConnected) {
-    <button>Se connecter</button>
+  <button>Se connecter</button>
   } @else {
-    <button>Mon compte</button>
+  <button>Mon compte</button>
   }
 </header>
 ```
@@ -54,17 +49,17 @@ export class TasksComponent {
   tasks: Task[] = [
     {
       id: 1,
-      title: 'Apprendre Angular',
+      title: "Apprendre Angular",
       done: true,
     },
     {
       id: 2,
-      title: 'Rejoindre le Discord de Bonjour Angular',
+      title: "Rejoindre le Discord de Bonjour Angular",
       done: true,
     },
     {
       id: 3,
-      title: 'Centrer une div',
+      title: "Centrer une div",
       done: false,
     },
   ];
@@ -76,9 +71,9 @@ On peut alors afficher la liste des tâches :
 ```html
 <ul>
   @for (task of tasks; track task.id) {
-    <li>{{ task.title }}</li>
+  <li>{{ task.title }}</li>
   } @empty {
-    <li>Aucune tâche</li>
+  <li>Aucune tâche</li>
   }
 </ul>
 ```
@@ -93,7 +88,7 @@ Par exemple, imaginons un composant `UserComponent` qui affiche un utilisateur :
 export class UserComponent {
   user: User = {
     id: 1,
-    role: 'teacher',
+    role: "teacher",
   };
 }
 ```
@@ -102,18 +97,14 @@ On peut alors afficher l'âge de l'utilisateur en fonction de sa valeur :
 
 ```html
 <p>
-  @switch (user.role) {
-    @case('student') {
-      <span>Vous êtes un.e étudiant.e</span>
-    }
-    @case('teacher') {
-      <span>Vous êtes un.e enseignant.e</span>
-    }
-    @case('director') {
-      <span>Vous êtes un.e directeur.rice</span>
-    }
-    @default {
-      <span>Vous êtes un.e inconnu.e</span>
-    }
-  }
+  @switch (user.role) { @case('student') {
+  <span>Vous êtes un.e étudiant.e</span>
+  } @case('teacher') {
+  <span>Vous êtes un.e enseignant.e</span>
+  } @case('director') {
+  <span>Vous êtes un.e directeur.rice</span>
+  } @default {
+  <span>Vous êtes un.e inconnu.e</span>
+  } }
 </p>
+```

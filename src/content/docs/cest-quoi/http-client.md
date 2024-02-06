@@ -5,9 +5,7 @@ sidebar:
   label: Http Client
 ---
 
-Le `HttpClient` permet de faire des requêtes Http en GET, POST, DELETE, PUT etc.
-
-C'est donc l'outil d'Angular qui permet d'utiliser les endpoints que les devs' backend ont mis en place pour vous.
+Le `HttpClient` est l'utilitaire d'Angular qui permet de faire des requêtes Http en GET, POST, DELETE, PUT etc.
 
 Pour pouvoir utiliser le `HttpClient`, vous devez ajouter `provideHttpClient()` dans le tableau de providers de `appConfig`.
 
@@ -22,7 +20,7 @@ Cela a pour effet de mettre à disposition le `HttpClient` au sein de votre appl
 ```typescript
 import { HttpClient } from "@angular/common/http";
 
-@Injectable()
+@Injectable({ providedIn: "root" })
 export class TodosService {
   private readonly http = inject(HttpClient);
 
@@ -46,6 +44,8 @@ export class TodosService {
 ```
 
 Les différentes méthodes du `HttpClient` renvoient des `Observable`, il faut donc `subscribe()` pour que cela fonctionne.
+
+> **Note** : Si vous voulez en savoir plus sur RxJS, je vous invite à consulter [mon article](/articles/tout-ce-que-je-sais-sur-rxjs/).
 
 A noter que les call http se `complete` automatiquement lorsqu'ils sont terminés donc dans l'absolu il n'est pas nécessaire de `unsubscribe()`, mais afin d'éviter des potentiels effets de bords indésirables (requête non terminée car le composant a été détruit avant la fin du call) je vous conseille de toujours vous désabonner.
 
