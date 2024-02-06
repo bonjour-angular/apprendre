@@ -11,18 +11,18 @@ Imaginons que nous avons un composant qui affiche une liste de produits sur notr
 
 ```typescript
 @Component({
-  selector: 'app-products-list',
+  selector: "app-products-list",
   standalone: true,
   imports: [NgFor],
   template: `
     <ul>
       <li *ngFor="let product of products">
-         {{product.name}} costs {{product.price}}
+        {{ product.name }} costs {{ product.price }}
       </li>
     </ul>
-  `
+  `,
 })
-export class ProductsListComponent{
+export class ProductsListComponent {
   @Input() products: Product[];
 }
 ```
@@ -34,30 +34,30 @@ Et voilà à l'utilisation :
 
 ```typescript
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   standalone: true,
   imports: [ProductsListComponent],
   template: `
     <app-products-list [products]="shirts" />
     <app-products-list [products]="pants" />
-  `
+  `,
 })
 export class AppComponent {
   shirts = [
-    {id: 0, name: 'shirt1', price: 20},
-    {id: 1, name: 'shirt2', price: 10},
-    {id: 2, name: 'shirt3', price: 15},
-  ]
+    { id: 0, name: "shirt1", price: 20 },
+    { id: 1, name: "shirt2", price: 10 },
+    { id: 2, name: "shirt3", price: 15 },
+  ];
 
   pants = [
-    {id: 0, name: 'pant1', price: 20},
-    {id: 1, name: 'pant2', price: 10},
-    {id: 2, name: 'pant3', price: 15},
-  ]
+    { id: 0, name: "pant1", price: 20 },
+    { id: 1, name: "pant2", price: 10 },
+    { id: 2, name: "pant3", price: 15 },
+  ];
 }
 ```
 
-Ici, on a un composant qui utilise deux fois le composant `ProductsListComponent` dans le template en y passant une liste différente à chaque fois grâce à l'attribut `[products]` qui correspond au nom qu'on a utilisé dans le composant ! 
+Ici, on a un composant qui utilise deux fois le composant `ProductsListComponent` dans le template en y passant une liste différente à chaque fois grâce à l'attribut `[products]` qui correspond au nom qu'on a utilisé dans le composant !
 
 ### Alias
 
@@ -65,19 +65,17 @@ On peut aussi donner un nom différent à la propriété entre son consommateur 
 
 ```typescript
 @Component({
-  selector: 'app-products-list',
+  selector: "app-products-list",
   standalone: true,
   imports: [NgFor],
   template: `
     <ul>
-      <li *ngFor="let item of items">
-         {{item.name}} costs {{item.price}}
-      </li>
+      <li *ngFor="let item of items">{{ item.name }} costs {{ item.price }}</li>
     </ul>
-  `
+  `,
 })
-export class ProductsListComponent{
-  @Input({alias : 'products'}) items: Product[];
+export class ProductsListComponent {
+  @Input({ alias: "products" }) items: Product[];
 }
 ```
 
@@ -89,9 +87,9 @@ Nous pouvons rendre obligatoire nos `@Input()` grâce à la propriété `require
   @Input({required: true}) products: Product[];
 ```
 
-En passant  `{required: true}` à votre @Input(), celui-ci devient requis lors de l'utilisation du composant, si vous ne le mettez pas alors vous aurez une erreur de compilation !
+En passant `{required: true}` à votre @Input(), celui-ci devient requis lors de l'utilisation du composant, si vous ne le mettez pas alors vous aurez une erreur de compilation !
 
-### Transform 
+### Transform
 
 La propriété `transform` permet de transformer la valeur de l'`@Input()` avant qu'elle soit assignée à la propriété du composant.
 
@@ -100,6 +98,7 @@ La propriété `transform` permet de transformer la valeur de l'`@Input()` avant
 ```
 
 Il existe plusieurs fonctions qu'Angular a mis à disposition pour transformer les valeurs des `@Input()` :
+
 - `{transform: booleanAttribute}` : transforme la valeur en boolean
 - `{transform: numberAttribute}` : transforme la valeur en nombre
 
@@ -110,9 +109,7 @@ Pour que cela fonctionne, il faut activer cette fonctionnalité dans `appConfig`
 
 ```ts
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(appRoutes, withComponentInputBinding()),
-  ],
+  providers: [provideRouter(appRoutes, withComponentInputBinding())],
 };
 ```
 
@@ -128,17 +125,17 @@ Vous pouvez ensuite récupérer les données de la route dans votre composant :
   },
 ```
 
-```ts	
+```ts
 @Component({
   template: `
-    {{id}}
-    {{showCart}}
-    {{id}}
-  `
+    {{ id }}
+    {{ foo }}
+    {{ showCart }}
+  `,
 })
 export class ProductsComponent {
-  @Input() id: string;
-  @Input() foo: string;
-  @Input() showCart: boolean;
+  @Input() id: string; // ça vient de /:id
+  @Input() foo: string; // ça vient de ?foo=bar
+  @Input() showCart: boolean; // ça vient de data: { showCart: true }
 }
 ```

@@ -21,29 +21,29 @@ Jusqu'à maintenant si vous vouliez récupérer `:id` ou `showCart` ou encore un
 @Component({
   template: `
     <h2>Snapshot</h2>
-    {{id}}
-    {{showCart }}
-    {{id}}
+    {{ id }}
+    {{ showCart }}
+    {{ foo }}
 
     <h2>Observable</h2>
-    {{id$ | async}}
-    {{showCart$ | async }}
-    {{id$ | async}}
-  `
+    {{ id$ | async }}
+    {{ showCart$ | async }}
+    {{ foo$ | async }}
+  `,
 })
 export class ProductsComponent {
- private activatedRoute = inject(ActivatedRoute);
+  private activatedRoute = inject(ActivatedRoute);
 
   // Snapshot
-  id = this.activatedRoute.snapshot.params['id'];
-  showCart = this.activatedRoute.snapshot.data['showCart'];
-  foo = this.activatedRoute.snapshot.queryParams['foo'];
+  id = this.activatedRoute.snapshot.params["id"];
+  showCart = this.activatedRoute.snapshot.data["showCart"];
+  foo = this.activatedRoute.snapshot.queryParams["foo"];
 
   // Observables
-  id$ = this.activatedRoute.params.pipe(map((params) => params['id']));
-  showCart$ = this.activatedRoute.data.pipe(map((data) => data['showCart']));
-  foo$ = this.activatedRoute.queryParams.pipe( 
-    map((queryParams) => queryParams['foo']) 
+  id$ = this.activatedRoute.params.pipe(map((params) => params["id"]));
+  showCart$ = this.activatedRoute.data.pipe(map((data) => data["showCart"]));
+  foo$ = this.activatedRoute.queryParams.pipe(
+    map((queryParams) => queryParams["foo"])
   );
 }
 ```
@@ -54,10 +54,10 @@ Grâce à `@Input()` vous pourrez récupérer ces trois données directement !
 ```ts
 @Component({
   template: `
-    {{id}}
-    {{showCart}}
-    {{id}}
-  `
+    {{ id }}
+    {{ showCart }}
+    {{ id }}
+  `,
 })
 export class ProductsComponent {
   @Input() id: string;
@@ -68,13 +68,10 @@ export class ProductsComponent {
 
 Il suffit simplement de nommer votre `@Input()` comme le nom de la donnée sur laquelle vous voulez être bindé, et c'est tout !
 
-Il faut également ajouter `withComponentInputBinding()` dans votre config, comme ceci : 
+Il faut également ajouter `withComponentInputBinding()` dans votre config, comme ceci :
 
 ```ts
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideRouter(routes, withComponentInputBinding()),
-  ],
+  providers: [provideRouter(routes, withComponentInputBinding())],
 };
-
 ```
