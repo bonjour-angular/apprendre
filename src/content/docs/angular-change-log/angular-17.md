@@ -2,9 +2,9 @@
 title: Angular 17
 description: Angular 17
 sidebar:
-    badge:
-        text: New
-        variant: caution
+  badge:
+    text: New
+    variant: caution
 ---
 
 Cette liste constitue les nouveautés majeures d'Angular 16. Pour une liste complète des changements, consultez le [CHANGELOG](https://github.com/angular/angular/blob/main/CHANGELOG.md)
@@ -12,6 +12,10 @@ Cette liste constitue les nouveautés majeures d'Angular 16. Pour une liste comp
 ### Control Flow
 
 Une toute nouvelle gestion du Control Flow est disponible. Les `*ngIf` et `*ngFor` sont remplacés par `@if` et `@for` [Pour en savoir plus.](/cest-quoi/control-flow)
+
+### Signal Inputs
+
+Vous pouvez désormais utiliser les inputs en tant que Signals, sans décorateurs. [Pour en savoir plus.](https://www.youtube.com/watch?v=rM8Ljw1BMTM)
 
 ### Defer
 
