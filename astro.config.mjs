@@ -61,9 +61,9 @@ export default defineConfig({
           collapsed: false,
         },
         {
-          label: "😎 Tips",
+          label: "😎 Bonnes pratiques",
           autogenerate: {
-            directory: "tips",
+            directory: "best-practices",
           },
           collapsed: false,
         },

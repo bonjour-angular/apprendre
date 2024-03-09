@@ -5,6 +5,11 @@ sidebar:
   label: Input
 ---
 
+:::note
+Angular 17.1 introduit une nouvelle syntaxe pour les `@Input()`. Il s'agit des signal inputs. Plus d'infos [ici](/docs/videos/signal-inputs).
+Dans ce document, je vous explique comment utiliser les `@Input()` classiques.
+:::
+
 `@Input()` sert à passer une donnée d'un composant parent vers son composant enfant.
 
 Imaginons que nous avons un composant qui affiche une liste de produits sur notre site ecommerce :
