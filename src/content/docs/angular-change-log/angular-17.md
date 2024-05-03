@@ -7,7 +7,7 @@ sidebar:
     variant: caution
 ---
 
-Cette liste constitue les nouveautés majeures d'Angular 16. Pour une liste complète des changements, consultez le [CHANGELOG](https://github.com/angular/angular/blob/main/CHANGELOG.md)
+Cette liste constitue les nouveautés majeures d'Angular 17. Pour une liste complète des changements, consultez le [CHANGELOG](https://github.com/angular/angular/blob/main/CHANGELOG.md)
 
 ### Control Flow
 
