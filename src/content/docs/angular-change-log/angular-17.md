@@ -1,10 +1,6 @@
 ---
 title: Angular 17
 description: Angular 17
-sidebar:
-  badge:
-    text: New
-    variant: caution
 ---
 
 Cette liste constitue les nouveautés majeures d'Angular 17. Pour une liste complète des changements, consultez le [CHANGELOG](https://github.com/angular/angular/blob/main/CHANGELOG.md)
