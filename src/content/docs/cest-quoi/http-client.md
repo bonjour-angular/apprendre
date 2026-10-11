@@ -17,6 +17,8 @@ export const appConfig: ApplicationConfig = {
 
 Cela a pour effet de mettre à disposition le `HttpClient` au sein de votre application entière, ainsi vous pourrez faire vos requêtes http.
 
+> **Note** : Pour modifier toutes vos requêtes ou leurs réponses au même endroit (ajouter un token, gérer les erreurs...), regardez du côté des [Interceptors](/cest-quoi/interceptor).
+
 ```typescript
 import { HttpClient } from "@angular/common/http";
 
