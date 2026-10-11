@@ -1,10 +1,6 @@
 ---
 title: Angular 18
 description: Angular 18
-sidebar:
-  badge:
-    text: New
-    variant: caution
 ---
 
 Cette liste constitue les nouveautés majeures d'Angular 18. Pour une liste complète des changements, consultez le [Blog officiel](https://blog.angular.dev/angular-v18-is-now-available-e79d5ac0affe)
