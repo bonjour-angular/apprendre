@@ -5,10 +5,11 @@ import CommentSection from "./CommentSection.astro";
 
 const { slug } = Astro.props;
 
-const withCommentSection =
-  slug.startsWith("articles") ||
-  slug.startsWith("tips") ||
-  slug.startsWith("cest-quoi");
+const sectionsWithComments = ["articles", "best-practices", "cest-quoi"];
+
+const withCommentSection = sectionsWithComments.some((section) =>
+  slug.startsWith(section)
+);
 ---
 
 <Default {...Astro.props}><slot /></Default>
